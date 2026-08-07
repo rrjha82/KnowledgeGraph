@@ -1,0 +1,126 @@
+{
+  "nodes": [
+    {
+      "id": "LoginPage",
+      "type": "Page"
+    },
+    {
+      "id": "txtEmailAddress",
+      "type": "Locator"
+    },
+    {
+      "id": "txtPassword",
+      "type": "Locator"
+    },
+    {
+      "id": "btnLogin",
+      "type": "Locator"
+    },
+    {
+      "id": "txtErrorMessage",
+      "type": "Locator"
+    },
+    {
+      "id": "setEmail",
+      "type": "Method"
+    },
+    {
+      "id": "setPassword",
+      "type": "Method"
+    },
+    {
+      "id": "clickLogin",
+      "type": "Method"
+    },
+    {
+      "id": "login",
+      "type": "Method"
+    },
+    {
+      "id": "getloginErrorMessage",
+      "type": "Method"
+    }
+  ],
+  "edges": [
+    {
+      "from": "LoginPage",
+      "to": "txtEmailAddress",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "txtPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "btnLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "txtErrorMessage",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "setEmail",
+      "relation": "contains"
+    },
+    {
+      "from": "setEmail",
+      "to": "txtEmailAddress",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "setPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "setPassword",
+      "to": "txtPassword",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "clickLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "clickLogin",
+      "to": "btnLogin",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "login",
+      "relation": "contains"
+    },
+    {
+      "from": "login",
+      "to": "setEmail",
+      "relation": "calls"
+    },
+    {
+      "from": "login",
+      "to": "setPassword",
+      "relation": "calls"
+    },
+    {
+      "from": "login",
+      "to": "clickLogin",
+      "relation": "calls"
+    },
+    {
+      "from": "LoginPage",
+      "to": "getloginErrorMessage",
+      "relation": "contains"
+    },
+    {
+      "from": "getloginErrorMessage",
+      "to": "txtErrorMessage",
+      "relation": "uses"
+    }
+  ]
+}

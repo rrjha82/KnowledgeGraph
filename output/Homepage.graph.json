@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "id": "Homepage",
+      "type": "Page"
+    },
+    {
+      "id": "lnkMyAccount",
+      "type": "Locator"
+    },
+    {
+      "id": "lnkRegister",
+      "type": "Locator"
+    },
+    {
+      "id": "linkLogin",
+      "type": "Locator"
+    },
+    {
+      "id": "txtSearchbox",
+      "type": "Locator"
+    },
+    {
+      "id": "btnSearch",
+      "type": "Locator"
+    },
+    {
+      "id": "isHomePageExists",
+      "type": "Method"
+    },
+    {
+      "id": "clickOnMyAccount",
+      "type": "Method"
+    },
+    {
+      "id": "clickOnRegister",
+      "type": "Method"
+    },
+    {
+      "id": "clickOnLogin",
+      "type": "Method"
+    },
+    {
+      "id": "enterProductName",
+      "type": "Method"
+    },
+    {
+      "id": "clickOnSearchButton",
+      "type": "Method"
+    },
+    {
+      "id": "searchProduct",
+      "type": "Method"
+    },
+    {
+      "id": "clickSearch",
+      "type": "Method"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Homepage",
+      "to": "lnkMyAccount",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "lnkRegister",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "linkLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "txtSearchbox",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "btnSearch",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "isHomePageExists",
+      "relation": "contains"
+    },
+    {
+      "from": "isHomePageExists",
+      "to": "page",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "clickOnMyAccount",
+      "relation": "contains"
+    },
+    {
+      "from": "clickOnMyAccount",
+      "to": "lnkMyAccount",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "clickOnRegister",
+      "relation": "contains"
+    },
+    {
+      "from": "clickOnRegister",
+      "to": "lnkRegister",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "clickOnLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "clickOnLogin",
+      "to": "linkLogin",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "enterProductName",
+      "relation": "contains"
+    },
+    {
+      "from": "enterProductName",
+      "to": "txtSearchbox",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "clickOnSearchButton",
+      "relation": "contains"
+    },
+    {
+      "from": "clickOnSearchButton",
+      "to": "btnSearch",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "searchProduct",
+      "relation": "contains"
+    },
+    {
+      "from": "searchProduct",
+      "to": "txtSearchbox",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "clickSearch",
+      "relation": "contains"
+    },
+    {
+      "from": "clickSearch",
+      "to": "btnSearch",
+      "relation": "uses"
+    }
+  ]
+}

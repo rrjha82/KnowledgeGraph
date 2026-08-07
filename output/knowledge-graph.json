@@ -1,0 +1,721 @@
+{
+  "nodes": [
+    {
+      "id": "Homepage",
+      "type": "Page"
+    },
+    {
+      "id": "lnkMyAccount",
+      "type": "Locator"
+    },
+    {
+      "id": "lnkRegister",
+      "type": "Locator"
+    },
+    {
+      "id": "linkLogin",
+      "type": "Locator"
+    },
+    {
+      "id": "txtSearchbox",
+      "type": "Locator"
+    },
+    {
+      "id": "btnSearch",
+      "type": "Locator"
+    },
+    {
+      "id": "Homepage.isHomePageExists",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.clickOnMyAccount",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.clickOnRegister",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.clickOnLogin",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.enterProductName",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.clickOnSearchButton",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.searchProduct",
+      "type": "Method"
+    },
+    {
+      "id": "Homepage.clickSearch",
+      "type": "Method"
+    },
+    {
+      "id": "LoginPage",
+      "type": "Page"
+    },
+    {
+      "id": "txtEmailAddress",
+      "type": "Locator"
+    },
+    {
+      "id": "txtPassword",
+      "type": "Locator"
+    },
+    {
+      "id": "btnLogin",
+      "type": "Locator"
+    },
+    {
+      "id": "txtErrorMessage",
+      "type": "Locator"
+    },
+    {
+      "id": "LoginPage.setEmail",
+      "type": "Method"
+    },
+    {
+      "id": "LoginPage.setPassword",
+      "type": "Method"
+    },
+    {
+      "id": "LoginPage.clickLogin",
+      "type": "Method"
+    },
+    {
+      "id": "LoginPage.login",
+      "type": "Method"
+    },
+    {
+      "id": "LoginPage.getloginErrorMessage",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage",
+      "type": "Page"
+    },
+    {
+      "id": "txtFirstName",
+      "type": "Locator"
+    },
+    {
+      "id": "txtLastName",
+      "type": "Locator"
+    },
+    {
+      "id": "txtEmail",
+      "type": "Locator"
+    },
+    {
+      "id": "txtTelephone",
+      "type": "Locator"
+    },
+    {
+      "id": "txtConfirmpassword",
+      "type": "Locator"
+    },
+    {
+      "id": "chkdPolicy",
+      "type": "Locator"
+    },
+    {
+      "id": "btnContinue",
+      "type": "Locator"
+    },
+    {
+      "id": "msgConfirmation",
+      "type": "Locator"
+    },
+    {
+      "id": "Registrationpage.setFirstName",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.setLastName",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.setEmail",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.setTelephone",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.setPassword",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.setConfirmPassword",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.setPrivacyPolicy",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.clickContinue",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.getConfirmationMsg",
+      "type": "Method"
+    },
+    {
+      "id": "Registrationpage.completeRegistration",
+      "type": "Method"
+    },
+    {
+      "id": "user registration test",
+      "type": "Test"
+    },
+    {
+      "id": "expect",
+      "type": "Assertion"
+    }
+  ],
+  "edges": [
+    {
+      "from": "Homepage",
+      "to": "lnkMyAccount",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "lnkRegister",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "linkLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "txtSearchbox",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "btnSearch",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.isHomePageExists",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.isHomePageExists",
+      "to": "page",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.clickOnMyAccount",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.clickOnMyAccount",
+      "to": "lnkMyAccount",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.clickOnRegister",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.clickOnRegister",
+      "to": "lnkRegister",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.clickOnLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.clickOnLogin",
+      "to": "linkLogin",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.enterProductName",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.enterProductName",
+      "to": "txtSearchbox",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.clickOnSearchButton",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.clickOnSearchButton",
+      "to": "btnSearch",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.searchProduct",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.searchProduct",
+      "to": "txtSearchbox",
+      "relation": "uses"
+    },
+    {
+      "from": "Homepage",
+      "to": "Homepage.clickSearch",
+      "relation": "contains"
+    },
+    {
+      "from": "Homepage.clickSearch",
+      "to": "btnSearch",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "txtEmailAddress",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "txtPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "btnLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "txtErrorMessage",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage",
+      "to": "LoginPage.setEmail",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage.setEmail",
+      "to": "txtEmailAddress",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "LoginPage.setPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage.setPassword",
+      "to": "txtPassword",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "LoginPage.clickLogin",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage.clickLogin",
+      "to": "btnLogin",
+      "relation": "uses"
+    },
+    {
+      "from": "LoginPage",
+      "to": "LoginPage.login",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage.login",
+      "to": "LoginPage.setEmail",
+      "relation": "calls"
+    },
+    {
+      "from": "LoginPage.login",
+      "to": "LoginPage.setPassword",
+      "relation": "calls"
+    },
+    {
+      "from": "LoginPage.login",
+      "to": "LoginPage.clickLogin",
+      "relation": "calls"
+    },
+    {
+      "from": "LoginPage",
+      "to": "LoginPage.getloginErrorMessage",
+      "relation": "contains"
+    },
+    {
+      "from": "LoginPage.getloginErrorMessage",
+      "to": "txtErrorMessage",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "txtFirstName",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "txtLastName",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "txtEmail",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "txtTelephone",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "txtPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "txtConfirmpassword",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "chkdPolicy",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "btnContinue",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "msgConfirmation",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setFirstName",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setFirstName",
+      "to": "txtFirstName",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setLastName",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setLastName",
+      "to": "txtLastName",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setEmail",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setEmail",
+      "to": "txtEmail",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setTelephone",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setTelephone",
+      "to": "txtTelephone",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setPassword",
+      "to": "txtPassword",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setConfirmPassword",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setConfirmPassword",
+      "to": "txtConfirmpassword",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.setPrivacyPolicy",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.setPrivacyPolicy",
+      "to": "chkdPolicy",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.clickContinue",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.clickContinue",
+      "to": "btnContinue",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.getConfirmationMsg",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.getConfirmationMsg",
+      "to": "msgConfirmation",
+      "relation": "uses"
+    },
+    {
+      "from": "Registrationpage",
+      "to": "Registrationpage.completeRegistration",
+      "relation": "contains"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setFirstName",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setLastName",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setEmail",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setTelephone",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setPassword",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setConfirmPassword",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.setPrivacyPolicy",
+      "relation": "calls"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "Registrationpage.clickContinue",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Homepage.clickOnMyAccount",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Homepage.clickOnRegister",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setFirstName",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setLastName",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setEmail",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setTelephone",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setPassword",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setConfirmPassword",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.setPrivacyPolicy",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.clickContinue",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "Registrationpage.getConfirmationMsg",
+      "relation": "calls"
+    },
+    {
+      "from": "user registration test",
+      "to": "expect",
+      "relation": "asserts"
+    },
+    {
+      "from": "LoginPage.login",
+      "to": "txtEmailAddress",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "LoginPage.login",
+      "to": "txtPassword",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "LoginPage.login",
+      "to": "btnLogin",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "txtFirstName",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "txtLastName",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "txtEmail",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "txtTelephone",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "txtPassword",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "txtConfirmpassword",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "chkdPolicy",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "Registrationpage.completeRegistration",
+      "to": "btnContinue",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "lnkMyAccount",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "lnkRegister",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "txtFirstName",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "txtLastName",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "txtEmail",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "txtTelephone",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "txtPassword",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "txtConfirmpassword",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "chkdPolicy",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "btnContinue",
+      "relation": "indirectUses"
+    },
+    {
+      "from": "user registration test",
+      "to": "msgConfirmation",
+      "relation": "indirectUses"
+    }
+  ]
+}

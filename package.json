@@ -1,0 +1,22 @@
+{
+  "name": "knowledgegraphbuilder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "build": "tsc",
+  "start": "tsx src/cli.ts",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^11.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.7",
+    "typescript": "^5.8.3"
+  }
+}
