@@ -2,14 +2,16 @@ import { FileScanner } from "./scanner/FileScanner";
 import { PageParser } from "./parser/PageParser";
 import { TestParser } from "./parser/TestParser";
 import { GraphBuilder } from "./graph/GraphBuilder";
-import { GraphExporter } from "./exporter/GraphExporter";
+import { GraphExporter } from "./explorer/GraphExporter";
 import { CrossReferenceBuilder } from "./resolver/CrossReferenceBuilder";
 import { QueryEngine } from "./query/QueryEngine";
 import { ImpactAnalyzer } from "./impact/ImpactAnalyzer";
 import { StaticAnalyzer } from "./analyzer/StaticAnalyzer";
+import { DependencyExplorer } from "./explorer/DependencyExplorer";
 
 import { PageInfo } from "./model/PageInfo";
 import { TestInfo } from "./model/TestInfo";
+import { ContextBuilder } from "./ai/ContextBuilder";
 
 // ==============================
 // Default Playwright Project Path
@@ -168,3 +170,22 @@ console.log(query.findTestsUsingLocator("txtPassword"));
 const impact = new ImpactAnalyzer(graph);
 
 impact.analyzeLocator("txtPassword");
+
+const explorer = new DependencyExplorer(graph);
+const contextBuilder = new ContextBuilder(graph);
+
+const context = contextBuilder.buildMethodContext(
+    "Registrationpage.completeRegistration"
+);
+
+console.log("");
+console.log("=================================");
+console.log("AI Context");
+console.log("=================================");
+console.log("");
+
+console.log(JSON.stringify(context, null, 2));
+
+explorer.explain(
+    "Registrationpage.completeRegistration"
+);
