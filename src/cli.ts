@@ -11,7 +11,7 @@ import { DependencyExplorer } from "./explorer/DependencyExplorer";
 
 
 import { ContextBuilder } from "./ai/ContextBuilder";
-import { PromptBuilder } from "./ai/promptbuilder";
+import { PromptBuilder } from "./ai/PromptBuilder";
 
 import { PageInfo } from "./model/PageInfo";
 import { TestInfo } from "./model/TestInfo";

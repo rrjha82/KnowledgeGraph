@@ -1,14 +1,7 @@
 import { KnowledgeGraph } from "../graph/KnowledgeGraph";
+import { AIContext } from "./AIContext";
 
-export interface AIContext {
 
-    method: string;
-
-    methods: string[];
-
-    locators: string[];
-
-}
 
 export class ContextBuilder {
 

@@ -1,6 +1,6 @@
 import { KnowledgeGraph } from "../graph/KnowledgeGraph";
 import { ContextBuilder } from "../ai/ContextBuilder";
-import { PromptBuilder } from "../ai/promptbuilder";
+import { PromptBuilder } from "../ai/PromptBuilder";
 
 export class AIDemo {
 
