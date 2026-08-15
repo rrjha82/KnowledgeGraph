@@ -9,9 +9,13 @@ import { ImpactAnalyzer } from "./impact/ImpactAnalyzer";
 import { StaticAnalyzer } from "./analyzer/StaticAnalyzer";
 import { DependencyExplorer } from "./explorer/DependencyExplorer";
 
+
+import { ContextBuilder } from "./ai/ContextBuilder";
+import { PromptBuilder } from "./ai/promptbuilder";
+
 import { PageInfo } from "./model/PageInfo";
 import { TestInfo } from "./model/TestInfo";
-import { ContextBuilder } from "./ai/ContextBuilder";
+
 
 // ==============================
 // Default Playwright Project Path
@@ -121,6 +125,28 @@ const analyzer = new StaticAnalyzer(graph);
 
 analyzer.printUnusedLocators();
 
+const contextBuilder = new ContextBuilder(graph);
+
+const context =
+    contextBuilder.buildMethodContext(
+        "Registrationpage.completeRegistration"
+    );
+
+const promptBuilder = new PromptBuilder();
+
+const prompt =
+    promptBuilder.buildMethodPrompt(context);
+
+console.log("");
+
+console.log("===================================");
+
+console.log("AI Prompt");
+
+console.log("===================================");
+
+console.log(prompt);
+
 // -----------------------------------------
 // Resolve Cross References
 // -----------------------------------------
@@ -172,11 +198,8 @@ const impact = new ImpactAnalyzer(graph);
 impact.analyzeLocator("txtPassword");
 
 const explorer = new DependencyExplorer(graph);
-const contextBuilder = new ContextBuilder(graph);
+//const contextBuilder = new ContextBuilder(graph);
 
-const context = contextBuilder.buildMethodContext(
-    "Registrationpage.completeRegistration"
-);
 
 console.log("");
 console.log("=================================");
