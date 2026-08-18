@@ -91,4 +91,30 @@ export class QueryEngine {
 
     }
 
+    public findImportsByPage(
+    page: string
+): string[] {
+
+    return this.graph.edges
+        .filter(edge =>
+            edge.from === page &&
+            edge.relation === "imports"
+        )
+        .map(edge => edge.to);
+
+}
+
+public findImportsByTest(
+    test: string
+): string[] {
+
+    return this.graph.edges
+        .filter(edge =>
+            edge.from === test &&
+            edge.relation === "imports"
+        )
+        .map(edge => edge.to);
+
+}
+
 }

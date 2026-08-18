@@ -10,52 +10,35 @@ export class ContextBuilder {
     ) {}
 
     public buildMethodContext(
-        method: string
-    ): AIContext {
+    method: string
+): AIContext {
 
-        const methods: string[] = [];
-        const locators: string[] = [];
+    const methods = this.graph.edges
+        .filter(edge =>
+            edge.from === method &&
+            edge.relation === "calls"
+        )
+        .map(edge => edge.to);
 
-        // -----------------------------
-        // Find called methods
-        // -----------------------------
-
-        this.graph.edges
-            .filter(edge =>
-                edge.from === method &&
-                edge.relation === "calls"
+    const locators = this.graph.edges
+        .filter(edge =>
+            edge.from === method &&
+            (
+                edge.relation === "uses" ||
+                edge.relation === "indirectUses"
             )
-            .forEach(edge => {
+        )
+        .map(edge => edge.to);
 
-                methods.push(edge.to);
+    return {
 
-            });
+        method,
 
-        // -----------------------------
-        // Find locators used
-        // -----------------------------
+        methods,
 
-        this.graph.edges
-            .filter(edge =>
-                edge.from === method &&
-                edge.relation === "uses"
-            )
-            .forEach(edge => {
+        locators
 
-                locators.push(edge.to);
+    };
 
-            });
-
-        return {
-
-            method,
-
-            methods,
-
-            locators
-
-        };
-
-    }
-
+}
 }

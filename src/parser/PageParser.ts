@@ -3,6 +3,7 @@ import * as fs from "fs";
 
 import { PageInfo } from "../model/PageInfo";
 import { MethodVisitor } from "./visitor/MethodVisitor";
+import { ImportVisitor } from "./visitor/ImportVisitor";
 
 export class PageParser {
 
@@ -19,13 +20,20 @@ export class PageParser {
 
         const pageInfo: PageInfo = {
 
-            pageName: "",
+    pageName: "",
 
-            locators: [],
+    imports: [],
 
-            methods: []
+    locators: [],
 
-        };
+    methods: []
+
+};
+
+        const importVisitor = new ImportVisitor();
+
+pageInfo.imports =
+    importVisitor.visit(sourceFile);
 
         const methodVisitor = new MethodVisitor();
 

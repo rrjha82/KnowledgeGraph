@@ -29,6 +29,31 @@ export class GraphBuilder {
             // -------------------------------
             // Locator Nodes
             // -------------------------------
+            // -------------------------------
+// Import Nodes
+// -------------------------------
+
+page.imports.forEach(imported => {
+
+    graph.addNode({
+
+        id: imported,
+
+        type: "Import"
+
+    });
+
+    graph.addEdge({
+
+        from: page.pageName,
+
+        to: imported,
+
+        relation: "imports"
+
+    });
+
+});
 
             page.locators.forEach(locator => {
 
@@ -124,6 +149,32 @@ export class GraphBuilder {
                 type: "Test"
 
             });
+
+            // -------------------------------
+// Test Imports
+// -------------------------------
+
+test.imports.forEach(imported => {
+
+    graph.addNode({
+
+        id: imported,
+
+        type: "Import"
+
+    });
+
+    graph.addEdge({
+
+        from: test.testName,
+
+        to: imported,
+
+        relation: "imports"
+
+    });
+
+});
 
             test.methodCalls.forEach(method => {
 

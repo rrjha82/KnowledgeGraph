@@ -8,7 +8,7 @@ import { QueryEngine } from "./query/QueryEngine";
 import { ImpactAnalyzer } from "./impact/ImpactAnalyzer";
 import { StaticAnalyzer } from "./analyzer/StaticAnalyzer";
 import { DependencyExplorer } from "./explorer/DependencyExplorer";
-
+import { GraphStatistics } from "./analyzer/GraphStatistics";
 
 import { ContextBuilder } from "./ai/ContextBuilder";
 import { PromptBuilder } from "./ai/PromptBuilder";
@@ -16,31 +16,37 @@ import { PromptBuilder } from "./ai/PromptBuilder";
 import { PageInfo } from "./model/PageInfo";
 import { TestInfo } from "./model/TestInfo";
 
-
-// ==============================
-// Default Playwright Project Path
-// ==============================
+// ======================================================
+// Playwright Project Path
+// ======================================================
 
 const projectPath =
     process.argv[2] ??
     "C:\\opencartplaywright";
 
-console.log("Project Path:");
-console.log(projectPath);
-
+console.log("");
 console.log("==================================");
 console.log("Knowledge Graph Builder Started");
 console.log("==================================");
 
+console.log("");
+console.log("Project Path:");
+console.log(projectPath);
+
+// ======================================================
+// Scan Project
+// ======================================================
+
 const scanner = new FileScanner();
 
+console.log("");
 console.log("Scanning project...");
 
 const files = scanner.scan(projectPath);
 
-// -----------------------------------------
-// Separate Page Files & Test Files
-// -----------------------------------------
+// ======================================================
+// Separate Page Files and Test Files
+// ======================================================
 
 const pageFiles = files.filter(file =>
     file.toLowerCase().includes("\\pages\\") ||
@@ -53,62 +59,78 @@ const testFiles = files.filter(file =>
 );
 
 console.log("");
+console.log("==================================");
 console.log("Page Files");
-console.log("--------------------------------");
+console.log("==================================");
 
-pageFiles.forEach(file => console.log(file));
+pageFiles.forEach(file =>
+    console.log(file)
+);
 
 console.log("");
+console.log("==================================");
 console.log("Test Files");
-console.log("--------------------------------");
+console.log("==================================");
 
-testFiles.forEach(file => console.log(file));
+testFiles.forEach(file =>
+    console.log(file)
+);
 
 console.log("");
 console.log(`Total Page Files : ${pageFiles.length}`);
 console.log(`Total Test Files : ${testFiles.length}`);
 
-// -----------------------------------------
+// ======================================================
 // Parse Page Objects
-// -----------------------------------------
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Parsing Page Objects");
+console.log("==================================");
 
 const pageParser = new PageParser();
+
 const pages: PageInfo[] = [];
 
 for (const file of pageFiles) {
 
     console.log("");
-    console.log("Parsing:", file);
+    console.log("Parsing Page:", file);
 
     const page = pageParser.parse(file);
 
     pages.push(page);
 
-    console.log(JSON.stringify(page, null, 2));
 }
 
-// -----------------------------------------
+// ======================================================
 // Parse Test Files
-// -----------------------------------------
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Parsing Test Files");
+console.log("==================================");
 
 const testParser = new TestParser();
+
 const tests: TestInfo[] = [];
 
 for (const file of testFiles) {
 
     console.log("");
-    console.log("Parsing:", file);
+    console.log("Parsing Test:", file);
 
     const test = testParser.parse(file);
 
     tests.push(test);
 
-    console.log(JSON.stringify(test, null, 2));
 }
 
-// -----------------------------------------
-// Build Graph
-// -----------------------------------------
+// ======================================================
+// Build Knowledge Graph
+// ======================================================
 
 console.log("");
 console.log("==================================");
@@ -121,9 +143,64 @@ const graph = graphBuilder.build(
     pages,
     tests
 );
+
+// ======================================================
+// Resolve Cross References
+//
+// IMPORTANT:
+// This must happen BEFORE ContextBuilder.
+// CrossReferenceBuilder creates indirectUses edges.
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Resolving Cross References");
+console.log("==================================");
+
+const resolver = new CrossReferenceBuilder();
+
+resolver.build(graph);
+
+// ======================================================
+// Static Analysis
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Static Analysis");
+console.log("==================================");
+
 const analyzer = new StaticAnalyzer(graph);
 
 analyzer.printUnusedLocators();
+
+// ======================================================
+// Dependency Explorer
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Dependency Explorer");
+console.log("==================================");
+
+const explorer = new DependencyExplorer(graph);
+
+explorer.explain(
+    "Registrationpage.completeRegistration"
+);
+
+// ======================================================
+// AI Context
+//
+// IMPORTANT:
+// This is AFTER CrossReferenceBuilder.
+// Therefore indirectUses relationships are available.
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("AI Context");
+console.log("==================================");
 
 const contextBuilder = new ContextBuilder(graph);
 
@@ -132,83 +209,170 @@ const context =
         "Registrationpage.completeRegistration"
     );
 
+console.log("");
+
+console.log(
+    JSON.stringify(
+        context,
+        null,
+        2
+    )
+);
+
+// ======================================================
+// AI Prompt
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("AI Prompt");
+console.log("==================================");
+
 const promptBuilder = new PromptBuilder();
 
 const prompt =
-    promptBuilder.buildMethodPrompt(context);
+    promptBuilder.buildMethodPrompt(
+        context
+    );
 
 console.log("");
-
-console.log("===================================");
-
-console.log("AI Prompt");
-
-console.log("===================================");
-
 console.log(prompt);
 
-// -----------------------------------------
-// Resolve Cross References
-// -----------------------------------------
+// ======================================================
+// Knowledge Graph Queries
+// ======================================================
 
-const resolver = new CrossReferenceBuilder();
+console.log("");
+console.log("==================================");
+console.log("Knowledge Graph Queries");
+console.log("==================================");
 
-resolver.build(graph);
+const query = new QueryEngine(graph);
 
-// -----------------------------------------
-// Print Graph
-// -----------------------------------------
+console.log("");
+console.log("Methods in Registrationpage:");
 
-console.log(JSON.stringify(graph, null, 2));
+console.log(
+    query.findMethodsByPage(
+        "Registrationpage"
+    )
+);
 
-// -----------------------------------------
-// Export Graph
-// -----------------------------------------
+console.log("");
+console.log("Locators in Registrationpage:");
 
-const exporter = new GraphExporter();
+console.log(
+    query.findLocatorsByPage(
+        "Registrationpage"
+    )
+);
+
+console.log("");
+console.log("Methods called by user registration test:");
+
+console.log(
+    query.findMethodsCalledByTest(
+        "user registration test"
+    )
+);
+
+console.log("");
+console.log("Locators used by user registration test:");
+
+console.log(
+    query.findLocatorsUsedByTest(
+        "user registration test"
+    )
+);
+
+console.log("");
+console.log("Tests using txtPassword:");
+
+console.log(
+    query.findTestsUsingLocator(
+        "txtPassword"
+    )
+);
+
+// ======================================================
+// Impact Analysis
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Impact Analysis");
+console.log("==================================");
+
+const impact = new ImpactAnalyzer(graph);
+
+impact.analyzeLocator(
+    "txtPassword"
+);
+
+// ======================================================
+// Import Graph
+// ======================================================
+
+console.log("");
+console.log("=================================");
+console.log("IMPORT GRAPH");
+console.log("=================================");
+
+pages.forEach(page => {
+
+    console.log("");
+    console.log(page.pageName);
+
+    console.log(
+        page.imports
+    );
+
+});
+
+// ======================================================
+// Graph Statistics
+// ======================================================
+
+const statistics =
+    new GraphStatistics(graph);
+
+statistics.print();
+
+// ======================================================
+// Print Complete Graph
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Knowledge Graph");
+console.log("==================================");
+
+console.log(
+    JSON.stringify(
+        graph,
+        null,
+        2
+    )
+);
+
+// ======================================================
+// Export Knowledge Graph
+// ======================================================
+
+console.log("");
+console.log("==================================");
+console.log("Exporting Knowledge Graph");
+console.log("==================================");
+
+const exporter =
+    new GraphExporter();
 
 exporter.export(
     graph,
     "knowledge-graph.json"
 );
 
-const query = new QueryEngine(graph);
-
-console.log("\n==============================");
-console.log("Knowledge Graph Queries");
-console.log("==============================");
-
-console.log("\nMethods in Registrationpage:");
-console.log(query.findMethodsByPage("Registrationpage"));
-
-console.log("\nLocators in Registrationpage:");
-console.log(query.findLocatorsByPage("Registrationpage"));
-
-console.log("\nMethods called by user registration test:");
-console.log(query.findMethodsCalledByTest("user registration test"));
-
-console.log("\nLocators used by user registration test:");
-console.log(query.findLocatorsUsedByTest("user registration test"));
-
-console.log("\nTests using txtPassword:");
-console.log(query.findTestsUsingLocator("txtPassword"));
-
-const impact = new ImpactAnalyzer(graph);
-
-impact.analyzeLocator("txtPassword");
-
-const explorer = new DependencyExplorer(graph);
-//const contextBuilder = new ContextBuilder(graph);
-
-
 console.log("");
-console.log("=================================");
-console.log("AI Context");
-console.log("=================================");
-console.log("");
-
-console.log(JSON.stringify(context, null, 2));
-
-explorer.explain(
-    "Registrationpage.completeRegistration"
-);
+console.log("==================================");
+console.log("Knowledge Graph Builder Completed");
+console.log("==================================");
