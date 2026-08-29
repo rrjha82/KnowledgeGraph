@@ -1,10 +1,25 @@
 import { KnowledgeGraph } from "../graph/KnowledgeGraph";
+import { ImpactContext } from "../ai/ImpactContext";
+
+export interface ImpactAnalysisResult
+    extends ImpactContext {
+}
+
 
 export class ImpactAnalyzer {
 
-    constructor(private graph: KnowledgeGraph) {}
+    constructor(
+        private graph: KnowledgeGraph
+    ) {}
 
-    public analyzeLocator(locator: string): void {
+
+    // ==========================================
+    // Analyze locator impact
+    // ==========================================
+
+    public analyzeLocator(
+        locator: string
+    ): ImpactAnalysisResult {
 
         console.log("");
         console.log("=================================");
@@ -15,88 +30,318 @@ export class ImpactAnalyzer {
         console.log("Changed Locator:");
         console.log(locator);
 
-        //-----------------------------------
-        // Step 1 : Direct methods using locator
-        //-----------------------------------
 
-        const affectedMethods = new Set<string>();
+        // ==========================================
+        // Step 1
+        // Find methods directly using the locator
+        // ==========================================
+
+        const directMethods =
+            new Set<string>();
+
 
         this.graph.edges
-            .filter(edge =>
-                edge.relation === "uses" &&
-                edge.to === locator
+            .filter(
+                edge =>
+                    edge.relation === "uses" &&
+                    edge.to === locator
             )
-            .forEach(edge => {
+            .forEach(
+                edge => {
 
-                affectedMethods.add(edge.from);
+                    directMethods.add(
+                        edge.from
+                    );
 
-            });
+                }
+            );
 
-        //-----------------------------------
-        // Step 2 : Find methods calling methods
-        //-----------------------------------
+
+        // ==========================================
+        // Step 2
+        // Find indirectly affected methods
+        //
+        // Example:
+        //
+        // txtPassword
+        //      ↓
+        // LoginPage.setPassword
+        //      ↓
+        // LoginPage.login
+        // ==========================================
+
+        const indirectMethods =
+            new Set<string>();
+
+
+        const affectedMethodSet =
+            new Set<string>(
+                directMethods
+            );
+
 
         let found = true;
+
 
         while (found) {
 
             found = false;
 
+
             this.graph.edges
-                .filter(edge => edge.relation === "calls")
-                .forEach(edge => {
+                .filter(
+                    edge =>
+                        edge.relation === "calls"
+                )
+                .forEach(
+                    edge => {
 
-                    if (
-                        affectedMethods.has(edge.to) &&
-                        !affectedMethods.has(edge.from)
-                    ) {
+                        const callingMethod =
+                            edge.from;
 
-                        affectedMethods.add(edge.from);
-                        found = true;
+                        const calledMethod =
+                            edge.to;
+
+
+                        if (
+                            affectedMethodSet.has(
+                                calledMethod
+                            ) &&
+                            !affectedMethodSet.has(
+                                callingMethod
+                            )
+                        ) {
+
+                            const sourceNode =
+                                this.graph.nodes.find(
+                                    node =>
+                                        node.id ===
+                                        callingMethod
+                                );
+
+
+                            if (
+                                sourceNode &&
+                                sourceNode.type ===
+                                    "Method"
+                            ) {
+
+                                affectedMethodSet.add(
+                                    callingMethod
+                                );
+
+
+                                indirectMethods.add(
+                                    callingMethod
+                                );
+
+
+                                found = true;
+
+                            }
+
+                        }
 
                     }
-
-                });
+                );
 
         }
 
-        console.log("");
-        console.log("Affected Methods");
-        console.log("-------------------------");
 
-        affectedMethods.forEach(method => console.log(method));
+        // ==========================================
+        // Step 3
+        // Find affected tests
+        // ==========================================
 
-        //-----------------------------------
-        // Step 3 : Find affected tests
-        //-----------------------------------
+        const affectedTests =
+            new Set<string>();
 
-        const affectedTests = new Set<string>();
 
         this.graph.nodes
-            .filter(node => node.type === "Test")
-            .forEach(testNode => {
+            .filter(
+                node =>
+                    node.type === "Test"
+            )
+            .forEach(
+                testNode => {
 
-                const reachable = this.isTestAffected(
-                    testNode.id,
-                    affectedMethods
-                );
+                    const reachable =
+                        this.isTestAffected(
+                            testNode.id,
+                            affectedMethodSet
+                        );
 
-                if (reachable) {
-                    affectedTests.add(testNode.id);
+
+                    if (reachable) {
+
+                        affectedTests.add(
+                            testNode.id
+                        );
+
+                    }
+
                 }
+            );
 
-            });
+
+        // ==========================================
+        // Step 4
+        // Convert Sets to Arrays
+        // ==========================================
+
+        const result:
+            ImpactAnalysisResult = {
+
+                locator,
+
+                directMethods:
+                    Array.from(
+                        directMethods
+                    ),
+
+                indirectMethods:
+                    Array.from(
+                        indirectMethods
+                    ),
+
+                affectedMethods:
+                    Array.from(
+                        affectedMethodSet
+                    ),
+
+                affectedTests:
+                    Array.from(
+                        affectedTests
+                    )
+
+            };
+
+
+        // ==========================================
+        // Print Direct Methods
+        // ==========================================
 
         console.log("");
-        console.log("Affected Tests");
-        console.log("-------------------------");
+        console.log(
+            "Directly Affected Methods"
+        );
+        console.log(
+            "-------------------------"
+        );
 
-        affectedTests.forEach(test => console.log(test));
+
+        if (
+            result.directMethods.length === 0
+        ) {
+
+            console.log("None");
+
+        } else {
+
+            result.directMethods.forEach(
+                method =>
+                    console.log(method)
+            );
+
+        }
+
+
+        // ==========================================
+        // Print Indirect Methods
+        // ==========================================
+
+        console.log("");
+        console.log(
+            "Indirectly Affected Methods"
+        );
+        console.log(
+            "-------------------------"
+        );
+
+
+        if (
+            result.indirectMethods.length === 0
+        ) {
+
+            console.log("None");
+
+        } else {
+
+            result.indirectMethods.forEach(
+                method =>
+                    console.log(method)
+            );
+
+        }
+
+
+        // ==========================================
+        // Print All Affected Methods
+        // ==========================================
+
+        console.log("");
+        console.log(
+            "Affected Methods"
+        );
+        console.log(
+            "-------------------------"
+        );
+
+
+        if (
+            result.affectedMethods.length === 0
+        ) {
+
+            console.log("None");
+
+        } else {
+
+            result.affectedMethods.forEach(
+                method =>
+                    console.log(method)
+            );
+
+        }
+
+
+        // ==========================================
+        // Print Affected Tests
+        // ==========================================
+
+        console.log("");
+        console.log(
+            "Affected Tests"
+        );
+        console.log(
+            "-------------------------"
+        );
+
+
+        if (
+            result.affectedTests.length === 0
+        ) {
+
+            console.log("None");
+
+        } else {
+
+            result.affectedTests.forEach(
+                test =>
+                    console.log(test)
+            );
+
+        }
+
+
+        return result;
+
     }
 
-    //--------------------------------------------------
-    // Recursive DFS
-    //--------------------------------------------------
+
+    // ==========================================
+    // Check whether a test reaches an affected
+    // method through the call graph
+    // ==========================================
 
     private isTestAffected(
         currentNode: string,
@@ -104,22 +349,65 @@ export class ImpactAnalyzer {
         visited: Set<string> = new Set()
     ): boolean {
 
-        if (visited.has(currentNode)) {
+        if (
+            visited.has(
+                currentNode
+            )
+        ) {
+
             return false;
+
         }
 
-        visited.add(currentNode);
 
-        const outgoingCalls = this.graph.edges.filter(edge =>
-            edge.from === currentNode &&
-            edge.relation === "calls"
+        visited.add(
+            currentNode
         );
 
-        for (const edge of outgoingCalls) {
 
-            if (affectedMethods.has(edge.to)) {
+        // ==========================================
+        // Current node is already affected
+        // ==========================================
+
+        if (
+            affectedMethods.has(
+                currentNode
+            )
+        ) {
+
+            return true;
+
+        }
+
+
+        // ==========================================
+        // Find methods called by current node
+        // ==========================================
+
+        const outgoingCalls =
+            this.graph.edges.filter(
+                edge =>
+                    edge.from ===
+                        currentNode &&
+                    edge.relation ===
+                        "calls"
+            );
+
+
+        for (
+            const edge of outgoingCalls
+        ) {
+
+            if (
+                affectedMethods.has(
+                    edge.to
+                )
+            ) {
+
                 return true;
+
             }
+
 
             if (
                 this.isTestAffected(
@@ -128,12 +416,16 @@ export class ImpactAnalyzer {
                     visited
                 )
             ) {
+
                 return true;
+
             }
 
         }
 
+
         return false;
+
     }
 
 }

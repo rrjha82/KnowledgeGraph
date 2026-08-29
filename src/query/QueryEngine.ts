@@ -116,5 +116,67 @@ public findImportsByTest(
         .map(edge => edge.to);
 
 }
+public findLocator(locatorName: string) {
 
+    const locator =
+        this.graph.nodes.find(
+            node =>
+                node.type === "Locator" &&
+                node.id === locatorName
+        );
+
+    if (!locator) {
+
+        return {
+            found: false,
+            locator: locatorName,
+            methods: [],
+            tests: []
+        };
+
+    }
+
+    const methods =
+        this.graph.edges
+            .filter(edge =>
+                edge.to === locatorName &&
+                (
+                    edge.relation === "uses" ||
+                    edge.relation === "indirectUses"
+                )
+            )
+            .map(edge => edge.from)
+            .filter(sourceId =>
+                this.graph.nodes.some(
+                    node =>
+                        node.id === sourceId &&
+                        node.type === "Method"
+                )
+            );
+
+    const tests =
+        this.graph.nodes
+            .filter(node =>
+                node.type === "Test"
+            )
+            .map(test => test.id)
+            .filter(testId =>
+                this.graph.edges.some(edge =>
+                    edge.from === testId &&
+                    edge.to === locatorName &&
+                    (
+                        edge.relation === "uses" ||
+                        edge.relation === "indirectUses"
+                    )
+                )
+            );
+
+    return {
+        found: true,
+        locator: locatorName,
+        methods,
+        tests
+    };
 }
+}
+

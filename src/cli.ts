@@ -1,378 +1,1432 @@
+import "dotenv/config";
+
+import * as readline from "readline";
+
 import { FileScanner } from "./scanner/FileScanner";
+
 import { PageParser } from "./parser/PageParser";
 import { TestParser } from "./parser/TestParser";
+
 import { GraphBuilder } from "./graph/GraphBuilder";
 import { GraphExporter } from "./explorer/GraphExporter";
+
 import { CrossReferenceBuilder } from "./resolver/CrossReferenceBuilder";
+
 import { QueryEngine } from "./query/QueryEngine";
 import { ImpactAnalyzer } from "./impact/ImpactAnalyzer";
+
 import { StaticAnalyzer } from "./analyzer/StaticAnalyzer";
 import { DependencyExplorer } from "./explorer/DependencyExplorer";
 import { GraphStatistics } from "./analyzer/GraphStatistics";
 
 import { ContextBuilder } from "./ai/ContextBuilder";
 import { PromptBuilder } from "./ai/PromptBuilder";
+import { BDDContextBuilder } from "./ai/BDDContextBuilder";
+
+import { TestContextBuilder } from "./ai/TestContextBuilder";
+
+import { AIService } from "./ai/services/AIService";
+
+import { MockAIProvider } from "./ai/providers/MockAIProvider";
+import { GroqAIProvider } from "./ai/providers/GroqAIProvider";
 
 import { PageInfo } from "./model/PageInfo";
 import { TestInfo } from "./model/TestInfo";
 
-// ======================================================
-// Playwright Project Path
-// ======================================================
+import {
+    CommandRouter,
+    CommandType
+} from "./command/commandRouter";
 
-const projectPath =
-    process.argv[2] ??
-    "C:\\opencartplaywright";
-
-console.log("");
-console.log("==================================");
-console.log("Knowledge Graph Builder Started");
-console.log("==================================");
-
-console.log("");
-console.log("Project Path:");
-console.log(projectPath);
 
 // ======================================================
-// Scan Project
+// MAIN
 // ======================================================
 
-const scanner = new FileScanner();
+async function main(): Promise<void> {
 
-console.log("");
-console.log("Scanning project...");
+    // ==================================================
+    // PROJECT PATH
+    // ==================================================
 
-const files = scanner.scan(projectPath);
+    const projectPath =
+        process.argv[2] ??
+        "C:\\OpenCartPlaywright";
 
-// ======================================================
-// Separate Page Files and Test Files
-// ======================================================
-
-const pageFiles = files.filter(file =>
-    file.toLowerCase().includes("\\pages\\") ||
-    file.toLowerCase().includes("/pages/")
-);
-
-const testFiles = files.filter(file =>
-    file.toLowerCase().includes("\\tests\\") ||
-    file.toLowerCase().includes("/tests/")
-);
-
-console.log("");
-console.log("==================================");
-console.log("Page Files");
-console.log("==================================");
-
-pageFiles.forEach(file =>
-    console.log(file)
-);
-
-console.log("");
-console.log("==================================");
-console.log("Test Files");
-console.log("==================================");
-
-testFiles.forEach(file =>
-    console.log(file)
-);
-
-console.log("");
-console.log(`Total Page Files : ${pageFiles.length}`);
-console.log(`Total Test Files : ${testFiles.length}`);
-
-// ======================================================
-// Parse Page Objects
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("Parsing Page Objects");
-console.log("==================================");
-
-const pageParser = new PageParser();
-
-const pages: PageInfo[] = [];
-
-for (const file of pageFiles) {
 
     console.log("");
-    console.log("Parsing Page:", file);
-
-    const page = pageParser.parse(file);
-
-    pages.push(page);
-
-}
-
-// ======================================================
-// Parse Test Files
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("Parsing Test Files");
-console.log("==================================");
-
-const testParser = new TestParser();
-
-const tests: TestInfo[] = [];
-
-for (const file of testFiles) {
+    console.log("==================================");
+    console.log("Knowledge Graph Builder Started");
+    console.log("==================================");
 
     console.log("");
-    console.log("Parsing Test:", file);
+    console.log("Project Path:");
+    console.log(projectPath);
 
-    const test = testParser.parse(file);
 
-    tests.push(test);
+    // ==================================================
+    // SCAN PROJECT
+    // ==================================================
 
-}
+    const scanner =
+        new FileScanner();
 
-// ======================================================
-// Build Knowledge Graph
-// ======================================================
+    console.log("");
+    console.log("Scanning project...");
 
-console.log("");
-console.log("==================================");
-console.log("Building Knowledge Graph");
-console.log("==================================");
+    const files =
+        scanner.scan(
+            projectPath
+        );
 
-const graphBuilder = new GraphBuilder();
 
-const graph = graphBuilder.build(
-    pages,
-    tests
-);
+    // ==================================================
+    // FIND PAGE FILES
+    // ==================================================
 
-// ======================================================
-// Resolve Cross References
-//
-// IMPORTANT:
-// This must happen BEFORE ContextBuilder.
-// CrossReferenceBuilder creates indirectUses edges.
-// ======================================================
+    const pageFiles =
+        files.filter(
+            file =>
+                file
+                    .toLowerCase()
+                    .includes("\\pages\\") ||
+                file
+                    .toLowerCase()
+                    .includes("/pages/")
+        );
 
-console.log("");
-console.log("==================================");
-console.log("Resolving Cross References");
-console.log("==================================");
 
-const resolver = new CrossReferenceBuilder();
+    // ==================================================
+    // FIND TEST FILES
+    // ==================================================
 
-resolver.build(graph);
+    const testFiles =
+        files.filter(
+            file =>
+                file
+                    .toLowerCase()
+                    .includes("\\tests\\") ||
+                file
+                    .toLowerCase()
+                    .includes("/tests/")
+        );
 
-// ======================================================
-// Static Analysis
-// ======================================================
 
-console.log("");
-console.log("==================================");
-console.log("Static Analysis");
-console.log("==================================");
+    // ==================================================
+    // PAGE FILES
+    // ==================================================
 
-const analyzer = new StaticAnalyzer(graph);
+    console.log("");
+    console.log("==================================");
+    console.log("Page Files");
+    console.log("==================================");
 
-analyzer.printUnusedLocators();
 
-// ======================================================
-// Dependency Explorer
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("Dependency Explorer");
-console.log("==================================");
-
-const explorer = new DependencyExplorer(graph);
-
-explorer.explain(
-    "Registrationpage.completeRegistration"
-);
-
-// ======================================================
-// AI Context
-//
-// IMPORTANT:
-// This is AFTER CrossReferenceBuilder.
-// Therefore indirectUses relationships are available.
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("AI Context");
-console.log("==================================");
-
-const contextBuilder = new ContextBuilder(graph);
-
-const context =
-    contextBuilder.buildMethodContext(
-        "Registrationpage.completeRegistration"
+    pageFiles.forEach(
+        file =>
+            console.log(file)
     );
 
-console.log("");
-
-console.log(
-    JSON.stringify(
-        context,
-        null,
-        2
-    )
-);
-
-// ======================================================
-// AI Prompt
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("AI Prompt");
-console.log("==================================");
-
-const promptBuilder = new PromptBuilder();
-
-const prompt =
-    promptBuilder.buildMethodPrompt(
-        context
-    );
-
-console.log("");
-console.log(prompt);
-
-// ======================================================
-// Knowledge Graph Queries
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("Knowledge Graph Queries");
-console.log("==================================");
-
-const query = new QueryEngine(graph);
-
-console.log("");
-console.log("Methods in Registrationpage:");
-
-console.log(
-    query.findMethodsByPage(
-        "Registrationpage"
-    )
-);
-
-console.log("");
-console.log("Locators in Registrationpage:");
-
-console.log(
-    query.findLocatorsByPage(
-        "Registrationpage"
-    )
-);
-
-console.log("");
-console.log("Methods called by user registration test:");
-
-console.log(
-    query.findMethodsCalledByTest(
-        "user registration test"
-    )
-);
-
-console.log("");
-console.log("Locators used by user registration test:");
-
-console.log(
-    query.findLocatorsUsedByTest(
-        "user registration test"
-    )
-);
-
-console.log("");
-console.log("Tests using txtPassword:");
-
-console.log(
-    query.findTestsUsingLocator(
-        "txtPassword"
-    )
-);
-
-// ======================================================
-// Impact Analysis
-// ======================================================
-
-console.log("");
-console.log("==================================");
-console.log("Impact Analysis");
-console.log("==================================");
-
-const impact = new ImpactAnalyzer(graph);
-
-impact.analyzeLocator(
-    "txtPassword"
-);
-
-// ======================================================
-// Import Graph
-// ======================================================
-
-console.log("");
-console.log("=================================");
-console.log("IMPORT GRAPH");
-console.log("=================================");
-
-pages.forEach(page => {
 
     console.log("");
-    console.log(page.pageName);
 
     console.log(
-        page.imports
+        `Total Page Files : ${pageFiles.length}`
     );
 
-});
 
-// ======================================================
-// Graph Statistics
-// ======================================================
+    // ==================================================
+    // TEST FILES
+    // ==================================================
 
-const statistics =
-    new GraphStatistics(graph);
+    console.log("");
+    console.log("==================================");
+    console.log("Test Files");
+    console.log("==================================");
 
-statistics.print();
 
-// ======================================================
-// Print Complete Graph
-// ======================================================
+    testFiles.forEach(
+        file =>
+            console.log(file)
+    );
 
-console.log("");
-console.log("==================================");
-console.log("Knowledge Graph");
-console.log("==================================");
 
-console.log(
-    JSON.stringify(
+    console.log("");
+
+    console.log(
+        `Total Test Files : ${testFiles.length}`
+    );
+
+
+    // ==================================================
+    // PARSE PAGE OBJECTS
+    // ==================================================
+
+    const pageParser =
+        new PageParser();
+
+    const pages:
+        PageInfo[] = [];
+
+
+    for (
+        const file of pageFiles
+    ) {
+
+        console.log("");
+
+        console.log(
+            "Parsing Page:",
+            file
+        );
+
+
+        const page =
+            pageParser.parse(
+                file
+            );
+
+
+        pages.push(
+            page
+        );
+
+    }
+
+
+    // ==================================================
+    // PARSE TESTS
+    // ==================================================
+
+    const testParser =
+        new TestParser();
+
+    const tests:
+        TestInfo[] = [];
+
+
+    for (
+        const file of testFiles
+    ) {
+
+        console.log("");
+
+        console.log(
+            "Parsing Test:",
+            file
+        );
+
+
+        const test =
+            testParser.parse(
+                file
+            );
+
+
+        tests.push(
+            test
+        );
+
+
+        console.log("");
+
+        console.log(
+            "Test:",
+            test.testName
+        );
+
+    }
+
+
+    // ==================================================
+    // BUILD KNOWLEDGE GRAPH
+    // ==================================================
+
+    console.log("");
+    console.log("==================================");
+    console.log("Building Knowledge Graph");
+    console.log("==================================");
+
+
+    const graphBuilder =
+        new GraphBuilder();
+
+
+    const graph =
+        graphBuilder.build(
+            pages,
+            tests
+        );
+
+
+    // ==================================================
+    // TEST CONTEXT BUILDER
+    // ==================================================
+
+    const testContextBuilder =
+        new TestContextBuilder(
+            graph
+        );
+
+
+    // ==================================================
+    // CROSS REFERENCE
+    // ==================================================
+
+    const resolver =
+        new CrossReferenceBuilder();
+
+
+    resolver.build(
+        graph
+    );
+
+
+    // ==================================================
+    // STATIC ANALYSIS
+    // ==================================================
+
+    const staticAnalyzer =
+        new StaticAnalyzer(
+            graph
+        );
+
+
+    staticAnalyzer.findUnusedLocators();
+
+
+    // ==================================================
+    // QUERY ENGINE
+    // ==================================================
+
+    const query =
+        new QueryEngine(
+            graph
+        );
+
+
+    // Prevent unused-variable compiler warnings
+    // while keeping QueryEngine initialized.
+    void query;
+
+
+    // ==================================================
+    // IMPACT ANALYZER
+    // ==================================================
+
+    const impact =
+        new ImpactAnalyzer(
+            graph
+        );
+
+
+    // ==================================================
+    // DEPENDENCY EXPLORER
+    // ==================================================
+
+    const dependencyExplorer =
+        new DependencyExplorer(
+            graph
+        );
+
+
+    void dependencyExplorer;
+
+
+    // ==================================================
+    // GRAPH STATISTICS
+    // ==================================================
+
+    const statistics =
+        new GraphStatistics(
+            graph
+        );
+
+
+    void statistics;
+
+
+    // ==================================================
+    // EXPORT GRAPH
+    // ==================================================
+
+    const exporter =
+        new GraphExporter();
+
+
+    exporter.export(
         graph,
-        null,
-        2
-    )
-);
+        "knowledge-graph.json"
+    );
+
+
+    // ==================================================
+    // AI CONTEXT BUILDER
+    // ==================================================
+
+    const contextBuilder =
+        new ContextBuilder(
+            graph
+        );
+
+
+    // ==================================================
+    // AI PROMPT BUILDER
+    // ==================================================
+
+    const promptBuilder =
+        new PromptBuilder();
+
+
+    // ==================================================
+    // BDD CONTEXT BUILDER
+    // ==================================================
+
+    const bddContextBuilder =
+        new BDDContextBuilder(
+            graph
+        );
+
+
+    // ==================================================
+    // AI PROVIDER
+    // ==================================================
+
+    const providerArgument =
+        process.argv.find(
+            arg =>
+                arg.startsWith(
+                    "--provider="
+                )
+        );
+
+
+    const providerName =
+        providerArgument
+            ?.split("=")[1]
+            ?.toLowerCase() ??
+        "mock";
+
+
+    let aiProvider:
+        MockAIProvider |
+        GroqAIProvider;
+
+
+    if (
+        providerName === "groq"
+    ) {
+
+        console.log("");
+        console.log(
+            "AI Provider: Groq"
+        );
+
+
+        aiProvider =
+            new GroqAIProvider();
+
+    } else {
+
+        console.log("");
+        console.log(
+            "AI Provider: Mock"
+        );
+
+
+        aiProvider =
+            new MockAIProvider();
+
+    }
+
+
+    // ==================================================
+    // AI SERVICE
+    // ==================================================
+
+    const aiService =
+        new AIService(
+            contextBuilder,
+            promptBuilder,
+            aiProvider
+        );
+
+
+    // ==================================================
+    // COMMAND ROUTER
+    // ==================================================
+
+    const commandRouter =
+        new CommandRouter();
+
+
+    // ==================================================
+    // CLI HEADER
+    // ==================================================
+
+    console.log("");
+    console.log("==================================");
+    console.log("Knowledge Graph AI");
+    console.log("==================================");
+
+    console.log("");
+    console.log("Available commands:");
+    console.log("");
+
+
+    console.log(
+        "Explain <Page.Method>"
+    );
+
+
+    console.log(
+        "Explain test <Test Name>"
+    );
+
+
+    console.log(
+        "Find locator <locator>"
+    );
+
+
+    console.log(
+        "Impact <locator>"
+    );
+
+
+    console.log(
+        "Generate BDD <Test Name>"
+    );
+
+
+    console.log("");
+
+    console.log(
+        "Type 'exit' to quit."
+    );
+
+    console.log("");
+
+
+    // ==================================================
+    // READLINE
+    // ==================================================
+
+    const rl =
+        readline.createInterface({
+            input:
+                process.stdin,
+
+            output:
+                process.stdout,
+
+            prompt:
+                "> "
+        });
+
+
+    rl.prompt();
+
+
+    // ==================================================
+    // COMMAND HANDLER
+    // ==================================================
+
+    rl.on(
+        "line",
+        async (
+            input: string
+        ) => {
+
+            const trimmed =
+                input.trim();
+
+
+            // ==========================================
+            // EXIT
+            // ==========================================
+
+            if (
+                trimmed.toLowerCase() ===
+                "exit"
+            ) {
+
+                rl.close();
+
+                return;
+
+            }
+
+
+            // ==========================================
+            // EMPTY COMMAND
+            // ==========================================
+
+            if (!trimmed) {
+
+                rl.prompt();
+
+                return;
+
+            }
+
+
+            try {
+
+                const command =
+                    commandRouter.route(
+                        trimmed
+                    );
+
+
+                console.log("");
+
+                console.log(
+                    "Command:",
+                    command
+                );
+
+
+                // ======================================
+                // EXPLAIN TEST
+                // ======================================
+
+            
+                switch (command) {
+
+
+                    // ==================================
+                    // EXPLAIN TEST
+                    // ==================================
+
+                    case CommandType.EXPLAIN_TEST: {
+
+                        const match =
+                            trimmed.match(
+                                /^explain\s+test\s+(.+)$/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log(
+                                "Please provide a test name."
+                            );
+
+                            break;
+
+                        }
+
+
+                        const testName =
+                            match[1].trim();
+
+
+                        // ------------------------------
+                        // Find TestInfo
+                        // ------------------------------
+
+                        const testInfo =
+                            tests.find(
+                                test =>
+                                    test.testName
+                                        .toLowerCase() ===
+                                    testName
+                                        .toLowerCase()
+                            );
+
+
+                        if (!testInfo) {
+
+                            console.log("");
+
+                            console.log(
+                                `Test not found: ${testName}`
+                            );
+
+
+                            console.log("");
+
+                            console.log(
+                                "Available tests:"
+                            );
+
+
+                            tests.forEach(
+                                test =>
+                                    console.log(
+                                        `- ${test.testName}`
+                                    )
+                            );
+
+
+                            break;
+
+                        }
+
+
+                        // ------------------------------
+                        // Build Test Context
+                        // ------------------------------
+
+                        const testContext =
+                            testContextBuilder.build(
+                                testInfo
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "Test Context"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            JSON.stringify(
+                                testContext,
+                                null,
+                                2
+                            )
+                        );
+
+
+                        // ------------------------------
+                        // AI Test Explanation
+                        // ------------------------------
+
+                        console.log("");
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log(
+                            "AI Test Explanation"
+                        );
+
+                        console.log(
+                            "================================="
+                        );
+
+
+                        const testResponse =
+                            await aiService.explainTest(
+                                testContext
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "AI Test Response"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            testResponse
+                        );
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================
+                    // EXPLAIN METHOD
+                    // ==================================
+
+                    case CommandType.EXPLAIN_METHOD: {
+
+                        const match =
+                            trimmed.match(
+                                /^explain\s+(.+)$/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log(
+                                "Please provide a method."
+                            );
+
+                            break;
+
+                        }
+
+
+                        const method =
+                            match[1].trim();
+
+
+                        const response =
+                            await aiService.explainMethod(
+                                method
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "AI Response"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            response
+                        );
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================
+                    // FIND LOCATOR
+                    // ==================================
+
+                    case CommandType.FIND_LOCATOR: {
+
+                        const match =
+                            trimmed.match(
+                                /(?:find\s+locator|locator)\s+(.+)/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log(
+                                "Please provide a locator."
+                            );
+
+                            break;
+
+                        }
+
+
+                        const locator =
+                            match[1].trim();
+
+
+                        // ------------------------------
+                        // Find methods using locator
+                        // ------------------------------
+
+                        const methods =
+                            graph.edges
+                                .filter(
+                                    edge =>
+                                        edge.relation ===
+                                            "uses" &&
+                                        edge.to ===
+                                            locator
+                                )
+                                .map(
+                                    edge =>
+                                        edge.from
+                                );
+
+
+                        // ------------------------------
+                        // Find tests using methods
+                        // ------------------------------
+
+                        const affectedTests =
+                            new Set<string>();
+
+
+                        for (
+                            const test of tests
+                        ) {
+
+                            const usesMethod =
+                                test.methodCalls.some(
+                                    method =>
+                                        methods.includes(
+                                            method
+                                        )
+                                );
+
+
+                            if (
+                                usesMethod
+                            ) {
+
+                                affectedTests.add(
+                                    test.testName
+                                );
+
+                            }
+
+                        }
+
+
+                        // ------------------------------
+                        // Locator Analysis
+                        // ------------------------------
+
+                        console.log("");
+
+                        console.log(
+                            "Locator Analysis"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            JSON.stringify(
+                                {
+                                    found:
+                                        methods.length > 0,
+
+                                    locator,
+
+                                    methods,
+
+                                    tests:
+                                        Array.from(
+                                            affectedTests
+                                        )
+
+                                },
+                                null,
+                                2
+                            )
+                        );
+
+
+                        // ------------------------------
+                        // AI Locator Analysis
+                        // ------------------------------
+
+                        const locatorContext = {
+
+                            locator,
+
+                            methods,
+
+                            tests:
+                                Array.from(
+                                    affectedTests
+                                )
+
+                        };
+
+
+                        console.log("");
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log(
+                            "AI Locator Analysis"
+                        );
+
+                        console.log(
+                            "================================="
+                        );
+
+
+                        const locatorResponse =
+                            await aiService.analyzeLocator(
+                                locatorContext
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "AI Locator Response"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            locatorResponse
+                        );
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================
+                    // IMPACT ANALYSIS
+                    // ==================================
+
+                    case CommandType.IMPACT_ANALYSIS: {
+
+                        const match =
+                            trimmed.match(
+                                /(?:impact)\s+(.+)/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log(
+                                "Please provide a locator."
+                            );
+
+                            break;
+
+                        }
+
+
+                        const locatorName =
+                            match[1].trim();
+
+
+                        // ------------------------------
+                        // Graph Impact Analysis
+                        // ------------------------------
+
+                        const impactContext =
+                            impact.analyzeLocator(
+                                locatorName
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log(
+                            "AI Impact Analysis"
+                        );
+
+                        console.log(
+                            "================================="
+                        );
+
+
+                        // ------------------------------
+                        // AI Impact Analysis
+                        // ------------------------------
+
+                        const impactResponse =
+                            await aiService.analyzeImpact(
+                                impactContext
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "AI Impact Response"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            impactResponse
+                        );
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================
+                    // GENERATE BDD
+                    // ==================================
+
+                    case CommandType.GENERATE_BDD: {
+
+                        const match =
+                            trimmed.match(
+                                /(?:generate\s+bdd|bdd)\s+(.+)/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log(
+                                "Please provide a test name."
+                            );
+
+                            break;
+
+                        }
+
+
+                        const testName =
+                            match[1].trim();
+
+
+                        // ------------------------------
+                        // Find TestInfo
+                        // ------------------------------
+
+                        const testInfo =
+                            tests.find(
+                                test =>
+                                    test.testName
+                                        .toLowerCase() ===
+                                    testName
+                                        .toLowerCase()
+                            );
+
+
+                        if (!testInfo) {
+
+                            console.log("");
+
+                            console.log(
+                                `Test not found: ${testName}`
+                            );
+
+
+                            console.log("");
+
+                            console.log(
+                                "Available tests:"
+                            );
+
+
+                            tests.forEach(
+                                test =>
+                                    console.log(
+                                        `- ${test.testName}`
+                                    )
+                            );
+
+
+                            break;
+
+                        }
+
+
+                        // ------------------------------
+                        // Build BDD Context
+                        // ------------------------------
+
+                        const bddContext =
+                            bddContextBuilder.build(
+                                testInfo
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "BDD Context"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            JSON.stringify(
+                                bddContext,
+                                null,
+                                2
+                            )
+                        );
+
+
+                        // ------------------------------
+                        // Build BDD Prompt
+                        // ------------------------------
+
+                        let bddPrompt =
+                            "";
+
+
+                        bddPrompt +=
+                            "You are an expert Playwright " +
+                            "BDD Automation Engineer.\n\n";
+
+
+                        bddPrompt +=
+                            "Generate a business-readable " +
+                            "Gherkin BDD scenario from the " +
+                            "following Playwright test " +
+                            "information.\n\n";
+
+
+                        bddPrompt +=
+                            `Test Name: ${bddContext.testName}\n\n`;
+
+
+                        bddPrompt +=
+                            "Page Objects:\n";
+
+
+                        bddContext.pageObjects.forEach(
+                            pageObject => {
+
+                                bddPrompt +=
+                                    `- ${pageObject}\n`;
+
+                            }
+                        );
+
+
+                        bddPrompt +=
+                            "\nMethods Called:\n";
+
+
+                        bddContext.methodCalls.forEach(
+                            methodCall => {
+
+                                bddPrompt +=
+                                    `- ${methodCall}\n`;
+
+                            }
+                        );
+
+
+                        bddPrompt +=
+                            "\nLocators Used:\n";
+
+
+                        bddContext.locators.forEach(
+                            locatorName => {
+
+                                bddPrompt +=
+                                    `- ${locatorName}\n`;
+
+                            }
+                        );
+
+
+                        bddPrompt +=
+                            "\nAssertions:\n";
+
+
+                        bddContext.assertions.forEach(
+                            assertion => {
+
+                                bddPrompt +=
+                                    `- ${assertion}\n`;
+
+                            }
+                        );
+
+
+                        bddPrompt +=
+                            "\nGenerate:\n";
+
+                        bddPrompt +=
+                            "1. Feature name.\n";
+
+                        bddPrompt +=
+                            "2. Scenario name.\n";
+
+                        bddPrompt +=
+                            "3. Given steps for the initial state.\n";
+
+                        bddPrompt +=
+                            "4. When steps for user actions.\n";
+
+                        bddPrompt +=
+                            "5. Then steps for expected results.\n";
+
+                        bddPrompt +=
+                            "6. Complete Gherkin syntax.\n";
+
+
+                        bddPrompt +=
+                            "\nImportant:\n";
+
+
+                        bddPrompt +=
+                            "Use business-readable language " +
+                            "rather than locator names such " +
+                            "as txtPassword or btnContinue.\n";
+
+
+                        bddPrompt +=
+                            "Do not invent functionality that " +
+                            "is not supported by the provided " +
+                            "test information.";
+
+
+                        // ------------------------------
+                        // AI BDD Response
+                        // ------------------------------
+
+                        const bddResponse =
+                            await aiService.ask(
+                                bddPrompt
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "BDD Response"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        console.log(
+                            bddResponse
+                        );
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================
+                    // UNKNOWN
+                    // ==================================
+
+                    case CommandType.UNKNOWN:
+
+                    default: {
+
+                        console.log("");
+
+                        console.log(
+                            "Unknown command."
+                        );
+
+
+                        console.log("");
+
+                        console.log(
+                            "Available commands:"
+                        );
+
+
+                        console.log(
+                            "Explain <Page.Method>"
+                        );
+
+
+                        console.log(
+                            "Explain test <Test Name>"
+                        );
+
+
+                        console.log(
+                            "Find locator <locator>"
+                        );
+
+
+                        console.log(
+                            "Impact <locator>"
+                        );
+
+
+                        console.log(
+                            "Generate BDD <Test Name>"
+                        );
+
+
+                        break;
+
+                    }
+
+                }
+
+            } catch (error) {
+
+                console.log("");
+
+                console.log(
+                    "=================================="
+                );
+
+                console.log(
+                    "Command Failed"
+                );
+
+                console.log(
+                    "=================================="
+                );
+
+
+                console.error(
+                    error instanceof Error
+                        ? error.message
+                        : error
+                );
+
+            }
+
+
+            console.log("");
+
+            rl.prompt();
+
+        }
+    );
+
+
+    // ==================================================
+    // CLOSE
+    // ==================================================
+
+    rl.on(
+        "close",
+        () => {
+
+            console.log("");
+
+            console.log(
+                "Knowledge Graph AI exited."
+            );
+
+        }
+    );
+
+}
+
 
 // ======================================================
-// Export Knowledge Graph
+// START
 // ======================================================
 
-console.log("");
-console.log("==================================");
-console.log("Exporting Knowledge Graph");
-console.log("==================================");
+main()
+    .catch(
+        error => {
 
-const exporter =
-    new GraphExporter();
+            console.error(
+                "Fatal error:",
+                error
+            );
 
-exporter.export(
-    graph,
-    "knowledge-graph.json"
-);
+            process.exit(
+                1
+            );
 
-console.log("");
-console.log("==================================");
-console.log("Knowledge Graph Builder Completed");
-console.log("==================================");
+        }
+    );

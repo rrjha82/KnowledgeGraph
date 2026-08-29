@@ -9,23 +9,34 @@ export class TestVisitor {
     ): void {
 
         // =====================================================
-        // Detect Test Name
-        // Example:
-        // test('user registration test', ...)
+        // 1. Detect test(...)
+        //
+        // test('user registration test', async ({ }) => {
         // =====================================================
 
         if (ts.isCallExpression(node)) {
 
+            const expressionText =
+                node.expression.getText();
+
+
             if (
-                node.expression.getText() === "test" &&
+                expressionText === "test" &&
                 node.arguments.length > 0
             ) {
 
-                const firstArgument = node.arguments[0];
+                const firstArgument =
+                    node.arguments[0];
 
-                if (ts.isStringLiteral(firstArgument)) {
 
-                    testInfo.testName = firstArgument.text;
+                if (
+                    ts.isStringLiteral(
+                        firstArgument
+                    )
+                ) {
+
+                    testInfo.testName =
+                        firstArgument.text;
 
                 }
 
@@ -33,65 +44,54 @@ export class TestVisitor {
 
         }
 
+
         // =====================================================
-        // Detect Page Object Creation
+        // 2. Detect Page Object Creation
         //
         // homepage = new Homepage(page)
         // registrationPage = new Registrationpage(page)
+        //
+        // Also handles:
+        //
+        // let homepage: Homepage;
+        // let registrationPage: Registrationpage;
         // =====================================================
 
         if (ts.isBinaryExpression(node)) {
 
             if (
-                node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-                ts.isNewExpression(node.right)
+                node.operatorToken.kind ===
+                ts.SyntaxKind.EqualsToken
             ) {
 
-                const variableName = node.left.getText();
+                const left =
+                    node.left;
 
-                const className = node.right.expression.getText();
+                const right =
+                    node.right;
 
-                testInfo.pageObjects.set(
-                    variableName,
-                    className
-                );
 
-            }
+                if (
+                    ts.isNewExpression(right)
+                ) {
 
-        }
+                    const variableName =
+                        left.getText();
 
-        // =====================================================
-        // Detect Page Method Calls
-        //
-        // registrationPage.setEmail()
-        //
-        // Store:
-        // Registrationpage.setEmail
-        // =====================================================
+                    const className =
+                        right.expression.getText();
 
-        if (ts.isCallExpression(node)) {
-
-            if (ts.isPropertyAccessExpression(node.expression)) {
-
-                const variableName =
-                    node.expression.expression.getText();
-
-                const methodName =
-                    node.expression.name.getText();
-
-                const className =
-                    testInfo.pageObjects.get(variableName);
-
-                if (className) {
-
-                    const fullMethodName =
-                        `${className}.${methodName}`;
 
                     if (
-                        !testInfo.methodCalls.includes(fullMethodName)
+                        !testInfo.pageObjects.has(
+                            variableName
+                        )
                     ) {
 
-                        testInfo.methodCalls.push(fullMethodName);
+                        testInfo.pageObjects.set(
+                            variableName,
+                            className
+                        );
 
                     }
 
@@ -101,19 +101,61 @@ export class TestVisitor {
 
         }
 
+
         // =====================================================
-        // Detect Assertions
+        // 3. Detect Page Object Method Calls
+        //
+        // await homepage.clickOnMyAccount()
+        //
+        // await registrationPage.setFirstName(...)
+        //
+        // Result:
+        //
+        // Homepage.clickOnMyAccount
+        // Registrationpage.setFirstName
         // =====================================================
 
         if (ts.isCallExpression(node)) {
 
-            if (node.expression.getText() === "expect") {
+            if (
+                ts.isPropertyAccessExpression(
+                    node.expression
+                )
+            ) {
 
-                if (
-                    !testInfo.assertions.includes("expect")
-                ) {
+                const objectExpression =
+                    node.expression.expression;
 
-                    testInfo.assertions.push("expect");
+                const variableName =
+                    objectExpression.getText();
+
+                const methodName =
+                    node.expression.name.getText();
+
+
+                const className =
+                    testInfo.pageObjects.get(
+                        variableName
+                    );
+
+
+                if (className) {
+
+                    const fullMethodName =
+                        `${className}.${methodName}`;
+
+
+                    if (
+                        !testInfo.methodCalls.includes(
+                            fullMethodName
+                        )
+                    ) {
+
+                        testInfo.methodCalls.push(
+                            fullMethodName
+                        );
+
+                    }
 
                 }
 
@@ -121,15 +163,86 @@ export class TestVisitor {
 
         }
 
+
         // =====================================================
-        // Recursive Traversal
+        // 4. Detect Assertions
+        //
+        // expect(confirmationmessage)
+        //     .toContain("Your Account Has Been Created!")
+        //
+        // Capture the complete assertion.
         // =====================================================
 
-        ts.forEachChild(node, child => {
+        if (ts.isCallExpression(node)) {
 
-            this.visit(child, testInfo);
+            if (
+                node.expression.getText() ===
+                "expect"
+            ) {
 
-        });
+                let assertionNode: ts.Node =
+                    node;
+
+
+                // expect(...).toContain(...)
+                if (
+                    node.parent &&
+                    ts.isPropertyAccessExpression(
+                        node.parent
+                    )
+                ) {
+
+                    if (
+                        node.parent.parent &&
+                        ts.isCallExpression(
+                            node.parent.parent
+                        )
+                    ) {
+
+                        assertionNode =
+                            node.parent.parent;
+
+                    }
+
+                }
+
+
+                const assertionText =
+                    assertionNode.getText();
+
+
+                if (
+                    !testInfo.assertions.includes(
+                        assertionText
+                    )
+                ) {
+
+                    testInfo.assertions.push(
+                        assertionText
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        // =====================================================
+        // 5. Recursive Traversal
+        // =====================================================
+
+        ts.forEachChild(
+            node,
+            child => {
+
+                this.visit(
+                    child,
+                    testInfo
+                );
+
+            }
+        );
 
     }
 

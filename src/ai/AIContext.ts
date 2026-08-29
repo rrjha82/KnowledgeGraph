@@ -1,3 +1,12 @@
+export interface MethodDependency {
+
+    method: string;
+
+    locators: string[];
+
+}
+
+
 export interface AIContext {
 
     method: string;
@@ -5,5 +14,7 @@ export interface AIContext {
     methods: string[];
 
     locators: string[];
+
+    dependencies: MethodDependency[];
 
 }
