@@ -3,27 +3,22 @@ import "dotenv/config";
 import * as readline from "readline";
 
 import { FileScanner } from "./scanner/FileScanner";
-
 import { PageParser } from "./parser/PageParser";
 import { TestParser } from "./parser/TestParser";
 
 import { GraphBuilder } from "./graph/GraphBuilder";
-import { GraphExporter } from "./explorer/GraphExporter";
-
 import { CrossReferenceBuilder } from "./resolver/CrossReferenceBuilder";
 
-import { QueryEngine } from "./query/QueryEngine";
 import { ImpactAnalyzer } from "./impact/ImpactAnalyzer";
-
 import { StaticAnalyzer } from "./analyzer/StaticAnalyzer";
 import { DependencyExplorer } from "./explorer/DependencyExplorer";
 import { GraphStatistics } from "./analyzer/GraphStatistics";
+import { QueryEngine } from "./query/QueryEngine";
 
 import { ContextBuilder } from "./ai/ContextBuilder";
 import { PromptBuilder } from "./ai/PromptBuilder";
-import { BDDContextBuilder } from "./ai/BDDContextBuilder";
-
 import { TestContextBuilder } from "./ai/TestContextBuilder";
+import { BDDContextBuilder } from "./ai/BDDContextBuilder";
 
 import { AIService } from "./ai/services/AIService";
 
@@ -45,6 +40,7 @@ import {
 
 async function main(): Promise<void> {
 
+
     // ==================================================
     // PROJECT PATH
     // ==================================================
@@ -53,6 +49,31 @@ async function main(): Promise<void> {
         process.argv[2] ??
         "C:\\OpenCartPlaywright";
 
+
+    // ==================================================
+    // PROVIDER
+    // ==================================================
+
+    const providerArgument =
+        process.argv.find(
+            argument =>
+                argument.startsWith(
+                    "--provider="
+                )
+        );
+
+
+    const providerName =
+        providerArgument
+            ? providerArgument
+                .split("=")[1]
+                .toLowerCase()
+            : "mock";
+
+
+    // ==================================================
+    // START
+    // ==================================================
 
     console.log("");
     console.log("==================================");
@@ -71,8 +92,10 @@ async function main(): Promise<void> {
     const scanner =
         new FileScanner();
 
+
     console.log("");
     console.log("Scanning project...");
+
 
     const files =
         scanner.scan(
@@ -86,13 +109,17 @@ async function main(): Promise<void> {
 
     const pageFiles =
         files.filter(
-            file =>
-                file
-                    .toLowerCase()
-                    .includes("\\pages\\") ||
-                file
-                    .toLowerCase()
-                    .includes("/pages/")
+            file => {
+
+                const lower =
+                    file.toLowerCase();
+
+                return (
+                    lower.includes("\\pages\\") ||
+                    lower.includes("/pages/")
+                );
+
+            }
         );
 
 
@@ -102,13 +129,17 @@ async function main(): Promise<void> {
 
     const testFiles =
         files.filter(
-            file =>
-                file
-                    .toLowerCase()
-                    .includes("\\tests\\") ||
-                file
-                    .toLowerCase()
-                    .includes("/tests/")
+            file => {
+
+                const lower =
+                    file.toLowerCase();
+
+                return (
+                    lower.includes("\\tests\\") ||
+                    lower.includes("/tests/")
+                );
+
+            }
         );
 
 
@@ -165,6 +196,7 @@ async function main(): Promise<void> {
     const pageParser =
         new PageParser();
 
+
     const pages:
         PageInfo[] = [];
 
@@ -200,6 +232,7 @@ async function main(): Promise<void> {
 
     const testParser =
         new TestParser();
+
 
     const tests:
         TestInfo[] = [];
@@ -260,16 +293,6 @@ async function main(): Promise<void> {
 
 
     // ==================================================
-    // TEST CONTEXT BUILDER
-    // ==================================================
-
-    const testContextBuilder =
-        new TestContextBuilder(
-            graph
-        );
-
-
-    // ==================================================
     // CROSS REFERENCE
     // ==================================================
 
@@ -292,30 +315,12 @@ async function main(): Promise<void> {
         );
 
 
-    staticAnalyzer.findUnusedLocators();
-
-
     // ==================================================
-    // QUERY ENGINE
+    // GRAPH STATISTICS
     // ==================================================
 
-    const query =
-        new QueryEngine(
-            graph
-        );
-
-
-    // Prevent unused-variable compiler warnings
-    // while keeping QueryEngine initialized.
-    void query;
-
-
-    // ==================================================
-    // IMPACT ANALYZER
-    // ==================================================
-
-    const impact =
-        new ImpactAnalyzer(
+    const graphStatistics =
+        new GraphStatistics(
             graph
         );
 
@@ -330,34 +335,24 @@ async function main(): Promise<void> {
         );
 
 
-    void dependencyExplorer;
-
-
     // ==================================================
-    // GRAPH STATISTICS
+    // QUERY ENGINE
     // ==================================================
 
-    const statistics =
-        new GraphStatistics(
+    const queryEngine =
+        new QueryEngine(
             graph
         );
 
 
-    void statistics;
-
-
     // ==================================================
-    // EXPORT GRAPH
+    // IMPACT ANALYZER
     // ==================================================
 
-    const exporter =
-        new GraphExporter();
-
-
-    exporter.export(
-        graph,
-        "knowledge-graph.json"
-    );
+    const impact =
+        new ImpactAnalyzer(
+            graph
+        );
 
 
     // ==================================================
@@ -379,6 +374,16 @@ async function main(): Promise<void> {
 
 
     // ==================================================
+    // TEST CONTEXT BUILDER
+    // ==================================================
+
+    const testContextBuilder =
+        new TestContextBuilder(
+            graph
+        );
+
+
+    // ==================================================
     // BDD CONTEXT BUILDER
     // ==================================================
 
@@ -391,22 +396,6 @@ async function main(): Promise<void> {
     // ==================================================
     // AI PROVIDER
     // ==================================================
-
-    const providerArgument =
-        process.argv.find(
-            arg =>
-                arg.startsWith(
-                    "--provider="
-                )
-        );
-
-
-    const providerName =
-        providerArgument
-            ?.split("=")[1]
-            ?.toLowerCase() ??
-        "mock";
-
 
     let aiProvider:
         MockAIProvider |
@@ -473,31 +462,25 @@ async function main(): Promise<void> {
     console.log("Available commands:");
     console.log("");
 
-
     console.log(
         "Explain <Page.Method>"
     );
-
 
     console.log(
         "Explain test <Test Name>"
     );
 
-
     console.log(
         "Find locator <locator>"
     );
-
 
     console.log(
         "Impact <locator>"
     );
 
-
     console.log(
         "Generate BDD <Test Name>"
     );
-
 
     console.log("");
 
@@ -559,7 +542,7 @@ async function main(): Promise<void> {
 
 
             // ==========================================
-            // EMPTY COMMAND
+            // EMPTY
             // ==========================================
 
             if (!trimmed) {
@@ -587,17 +570,12 @@ async function main(): Promise<void> {
                 );
 
 
-                // ======================================
+                // ==================================================
                 // EXPLAIN TEST
-                // ======================================
+                // ==================================================
 
-            
                 switch (command) {
 
-
-                    // ==================================
-                    // EXPLAIN TEST
-                    // ==================================
 
                     case CommandType.EXPLAIN_TEST: {
 
@@ -622,10 +600,6 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------
-                        // Find TestInfo
-                        // ------------------------------
-
                         const testInfo =
                             tests.find(
                                 test =>
@@ -643,7 +617,6 @@ async function main(): Promise<void> {
                             console.log(
                                 `Test not found: ${testName}`
                             );
-
 
                             console.log("");
 
@@ -665,9 +638,9 @@ async function main(): Promise<void> {
                         }
 
 
-                        // ------------------------------
+                        // ------------------------------------------
                         // Build Test Context
-                        // ------------------------------
+                        // ------------------------------------------
 
                         const testContext =
                             testContextBuilder.build(
@@ -695,9 +668,9 @@ async function main(): Promise<void> {
                         );
 
 
-                        // ------------------------------
-                        // AI Test Explanation
-                        // ------------------------------
+                        // ------------------------------------------
+                        // AI Explanation
+                        // ------------------------------------------
 
                         console.log("");
 
@@ -741,9 +714,9 @@ async function main(): Promise<void> {
                     }
 
 
-                    // ==================================
+                    // ==================================================
                     // EXPLAIN METHOD
-                    // ==================================
+                    // ==================================================
 
                     case CommandType.EXPLAIN_METHOD: {
 
@@ -766,6 +739,25 @@ async function main(): Promise<void> {
 
                         const method =
                             match[1].trim();
+
+
+                        // ------------------------------------------
+                        // Avoid treating "explain test" as method
+                        // ------------------------------------------
+
+                        if (
+                            method
+                                .toLowerCase()
+                                .startsWith("test ")
+                        ) {
+
+                            console.log(
+                                "Please use: Explain test <Test Name>"
+                            );
+
+                            break;
+
+                        }
 
 
                         const response =
@@ -795,9 +787,9 @@ async function main(): Promise<void> {
                     }
 
 
-                    // ==================================
+                    // ==================================================
                     // FIND LOCATOR
-                    // ==================================
+                    // ==================================================
 
                     case CommandType.FIND_LOCATOR: {
 
@@ -822,62 +814,26 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------
-                        // Find methods using locator
-                        // ------------------------------
+                        // ------------------------------------------
+                        // Use Impact Analyzer as single source
+                        // for locator dependency traversal
+                        // ------------------------------------------
 
-                        const methods =
-                            graph.edges
-                                .filter(
-                                    edge =>
-                                        edge.relation ===
-                                            "uses" &&
-                                        edge.to ===
-                                            locator
-                                )
-                                .map(
-                                    edge =>
-                                        edge.from
-                                );
+                        const locatorAnalysis =
+                            impact.analyzeLocator(
+                                locator
+                            );
 
 
-                        // ------------------------------
-                        // Find tests using methods
-                        // ------------------------------
+                        // ------------------------------------------
+                        // Check locator
+                        // ------------------------------------------
 
-                        const affectedTests =
-                            new Set<string>();
+                        const found =
+                            locatorAnalysis
+                                .affectedMethods
+                                .length > 0;
 
-
-                        for (
-                            const test of tests
-                        ) {
-
-                            const usesMethod =
-                                test.methodCalls.some(
-                                    method =>
-                                        methods.includes(
-                                            method
-                                        )
-                                );
-
-
-                            if (
-                                usesMethod
-                            ) {
-
-                                affectedTests.add(
-                                    test.testName
-                                );
-
-                            }
-
-                        }
-
-
-                        // ------------------------------
-                        // Locator Analysis
-                        // ------------------------------
 
                         console.log("");
 
@@ -893,17 +849,25 @@ async function main(): Promise<void> {
                         console.log(
                             JSON.stringify(
                                 {
-                                    found:
-                                        methods.length > 0,
+                                    found,
 
                                     locator,
 
-                                    methods,
+                                    directMethods:
+                                        locatorAnalysis
+                                            .directMethods,
 
-                                    tests:
-                                        Array.from(
-                                            affectedTests
-                                        )
+                                    indirectMethods:
+                                        locatorAnalysis
+                                            .indirectMethods,
+
+                                    affectedMethods:
+                                        locatorAnalysis
+                                            .affectedMethods,
+
+                                    affectedTests:
+                                        locatorAnalysis
+                                            .affectedTests
 
                                 },
                                 null,
@@ -912,23 +876,49 @@ async function main(): Promise<void> {
                         );
 
 
-                        // ------------------------------
-                        // AI Locator Analysis
-                        // ------------------------------
+                        if (!found) {
+
+                            console.log("");
+
+                            console.log(
+                                `Locator not found: ${locator}`
+                            );
+
+                            break;
+
+                        }
+
+
+                        // ------------------------------------------
+                        // Build NEW LocatorContext
+                        // ------------------------------------------
 
                         const locatorContext = {
 
                             locator,
 
-                            methods,
+                            directMethods:
+                                locatorAnalysis
+                                    .directMethods,
 
-                            tests:
-                                Array.from(
-                                    affectedTests
-                                )
+                            indirectMethods:
+                                locatorAnalysis
+                                    .indirectMethods,
+
+                            affectedMethods:
+                                locatorAnalysis
+                                    .affectedMethods,
+
+                            affectedTests:
+                                locatorAnalysis
+                                    .affectedTests
 
                         };
 
+
+                        // ------------------------------------------
+                        // AI Locator Analysis
+                        // ------------------------------------------
 
                         console.log("");
 
@@ -972,15 +962,15 @@ async function main(): Promise<void> {
                     }
 
 
-                    // ==================================
+                    // ==================================================
                     // IMPACT ANALYSIS
-                    // ==================================
+                    // ==================================================
 
                     case CommandType.IMPACT_ANALYSIS: {
 
                         const match =
                             trimmed.match(
-                                /(?:impact)\s+(.+)/i
+                                /^impact\s+(.+)$/i
                             );
 
 
@@ -999,15 +989,19 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------
+                        // ------------------------------------------
                         // Graph Impact Analysis
-                        // ------------------------------
+                        // ------------------------------------------
 
                         const impactContext =
                             impact.analyzeLocator(
                                 locatorName
                             );
 
+
+                        // ------------------------------------------
+                        // AI Impact Analysis
+                        // ------------------------------------------
 
                         console.log("");
 
@@ -1023,10 +1017,6 @@ async function main(): Promise<void> {
                             "================================="
                         );
 
-
-                        // ------------------------------
-                        // AI Impact Analysis
-                        // ------------------------------
 
                         const impactResponse =
                             await aiService.analyzeImpact(
@@ -1055,9 +1045,9 @@ async function main(): Promise<void> {
                     }
 
 
-                    // ==================================
+                    // ==================================================
                     // GENERATE BDD
-                    // ==================================
+                    // ==================================================
 
                     case CommandType.GENERATE_BDD: {
 
@@ -1082,10 +1072,6 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------
-                        // Find TestInfo
-                        // ------------------------------
-
                         const testInfo =
                             tests.find(
                                 test =>
@@ -1103,7 +1089,6 @@ async function main(): Promise<void> {
                             console.log(
                                 `Test not found: ${testName}`
                             );
-
 
                             console.log("");
 
@@ -1125,9 +1110,9 @@ async function main(): Promise<void> {
                         }
 
 
-                        // ------------------------------
+                        // ------------------------------------------
                         // Build BDD Context
-                        // ------------------------------
+                        // ------------------------------------------
 
                         const bddContext =
                             bddContextBuilder.build(
@@ -1155,24 +1140,24 @@ async function main(): Promise<void> {
                         );
 
 
-                        // ------------------------------
-                        // Build BDD Prompt
-                        // ------------------------------
+                        // ------------------------------------------
+                        // BDD Prompt
+                        // ------------------------------------------
 
                         let bddPrompt =
                             "";
 
 
                         bddPrompt +=
-                            "You are an expert Playwright " +
-                            "BDD Automation Engineer.\n\n";
+                            "You are an expert Playwright "
+                            + "BDD Automation Engineer.\n\n";
 
 
                         bddPrompt +=
-                            "Generate a business-readable " +
-                            "Gherkin BDD scenario from the " +
-                            "following Playwright test " +
-                            "information.\n\n";
+                            "Generate a business-readable "
+                            + "Gherkin BDD scenario from the "
+                            + "following Playwright test "
+                            + "information.\n\n";
 
 
                         bddPrompt +=
@@ -1262,20 +1247,20 @@ async function main(): Promise<void> {
 
 
                         bddPrompt +=
-                            "Use business-readable language " +
-                            "rather than locator names such " +
-                            "as txtPassword or btnContinue.\n";
+                            "Use business-readable language "
+                            + "rather than locator names such "
+                            + "as txtPassword or btnContinue.\n";
 
 
                         bddPrompt +=
-                            "Do not invent functionality that " +
-                            "is not supported by the provided " +
-                            "test information.";
+                            "Do not invent functionality that "
+                            + "is not supported by the provided "
+                            + "test information.";
 
 
-                        // ------------------------------
+                        // ------------------------------------------
                         // AI BDD Response
-                        // ------------------------------
+                        // ------------------------------------------
 
                         const bddResponse =
                             await aiService.ask(
@@ -1304,9 +1289,9 @@ async function main(): Promise<void> {
                     }
 
 
-                    // ==================================
+                    // ==================================================
                     // UNKNOWN
-                    // ==================================
+                    // ==================================================
 
                     case CommandType.UNKNOWN:
 
@@ -1318,33 +1303,27 @@ async function main(): Promise<void> {
                             "Unknown command."
                         );
 
-
                         console.log("");
 
                         console.log(
                             "Available commands:"
                         );
 
-
                         console.log(
                             "Explain <Page.Method>"
                         );
-
 
                         console.log(
                             "Explain test <Test Name>"
                         );
 
-
                         console.log(
                             "Find locator <locator>"
                         );
 
-
                         console.log(
                             "Impact <locator>"
                         );
-
 
                         console.log(
                             "Generate BDD <Test Name>"
@@ -1412,7 +1391,7 @@ async function main(): Promise<void> {
 
 
 // ======================================================
-// START
+// START APPLICATION
 // ======================================================
 
 main()

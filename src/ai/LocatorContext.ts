@@ -2,8 +2,12 @@ export interface LocatorContext {
 
     locator: string;
 
-    methods: string[];
+    directMethods: string[];
 
-    tests: string[];
+    indirectMethods: string[];
+
+    affectedMethods: string[];
+
+    affectedTests: string[];
 
 }

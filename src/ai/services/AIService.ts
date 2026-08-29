@@ -9,6 +9,9 @@ import { LocatorPromptBuilder } from "../LocatorPromptBuilder";
 import { TestContext } from "../TestContext";
 import { TestPromptBuilder } from "../TestPromptBuilder";
 
+import { ImpactContext } from "../ImpactContext";
+import { LocatorContext } from "../LocatorContext";
+
 
 export class AIService {
 
@@ -19,9 +22,9 @@ export class AIService {
     ) {}
 
 
-    // ==============================================
-    // Send prompt directly to AI provider
-    // ==============================================
+    // ==================================================
+    // DIRECT AI REQUEST
+    // ==================================================
 
     public async ask(
         prompt: string
@@ -34,9 +37,9 @@ export class AIService {
     }
 
 
-    // ==============================================
-    // Explain Method
-    // ==============================================
+    // ==================================================
+    // EXPLAIN METHOD
+    // ==================================================
 
     public async explainMethod(
         method: string
@@ -61,18 +64,12 @@ export class AIService {
     }
 
 
-    // ==============================================
-    // Impact Analysis
-    // ==============================================
+    // ==================================================
+    // IMPACT ANALYSIS
+    // ==================================================
 
     public async analyzeImpact(
-        context: {
-            locator: string;
-            directMethods: string[];
-            indirectMethods: string[];
-            affectedMethods: string[];
-            affectedTests: string[];
-        }
+        context: ImpactContext
     ): Promise<string> {
 
         const impactPromptBuilder =
@@ -92,16 +89,12 @@ export class AIService {
     }
 
 
-    // ==============================================
-    // Locator Analysis
-    // ==============================================
+    // ==================================================
+    // LOCATOR ANALYSIS
+    // ==================================================
 
     public async analyzeLocator(
-        context: {
-            locator: string;
-            methods: string[];
-            tests: string[];
-        }
+        context: LocatorContext
     ): Promise<string> {
 
         const locatorPromptBuilder =
@@ -121,9 +114,9 @@ export class AIService {
     }
 
 
-    // ==============================================
-    // Test Explanation
-    // ==============================================
+    // ==================================================
+    // EXPLAIN TEST
+    // ==================================================
 
     public async explainTest(
         context: TestContext
@@ -135,6 +128,31 @@ export class AIService {
 
         const prompt =
             testPromptBuilder.buildPrompt(
+                context
+            );
+
+
+        return await this.provider.ask(
+            prompt
+        );
+
+    }
+
+
+    // ==================================================
+    // GENERATE BDD
+    // ==================================================
+
+    public async generateBDD(
+        context: TestContext
+    ): Promise<string> {
+
+        const testPromptBuilder =
+            new TestPromptBuilder();
+
+
+        const prompt =
+            testPromptBuilder.buildBDDPrompt(
                 context
             );
 

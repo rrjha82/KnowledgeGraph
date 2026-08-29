@@ -4,16 +4,16 @@ import { TestContext } from "./TestContext";
 export class TestPromptBuilder {
 
 
+    // ==================================================
+    // EXPLAIN TEST
+    // ==================================================
+
     public buildPrompt(
         context: TestContext
     ): string {
 
         let prompt = "";
 
-
-        // ==================================================
-        // ROLE
-        // ==================================================
 
         prompt +=
             "You are an expert Playwright Automation, "
@@ -26,22 +26,19 @@ export class TestPromptBuilder {
 
 
         // ==================================================
-        // STRICT GROUNDING RULES
+        // GROUNDING RULES
         // ==================================================
 
         prompt +=
             "IMPORTANT GROUNDING RULES:\n";
 
-
         prompt +=
             "1. The Knowledge Graph is the single source of truth.\n";
-
 
         prompt +=
             "2. Use only the supplied test name, imports, page "
             + "objects, methods, method-to-locator dependencies, "
             + "locators, and assertions.\n";
-
 
         prompt +=
             "3. Do not invent URLs, navigation, application "
@@ -49,49 +46,235 @@ export class TestPromptBuilder {
             + "rules, API calls, database operations, security "
             + "behavior, or additional tests.\n";
 
+        prompt +=
+            "4. Do not invent method-to-locator relationships.\n";
 
         prompt +=
-            "4. Do not assume that a method performs an action "
-            + "unless that action is supported by its name or "
-            + "the supplied dependency information.\n";
-
+            "5. Preserve the exact method call order.\n";
 
         prompt +=
-            "5. Do not invent method-to-locator relationships. "
-            + "Use the supplied dependency mapping exactly.\n";
-
+            "6. Report assertions exactly as supplied.\n";
 
         prompt +=
-            "6. Do not claim that a locator is used by the test "
-            + "unless it appears in the supplied context.\n";
-
-
-        prompt +=
-            "7. Do not claim that a test calls a method unless "
-            + "the method appears in the supplied methodCalls list.\n";
-
-
-        prompt +=
-            "8. The methodCalls order must be preserved exactly.\n";
-
-
-        prompt +=
-            "9. Assertions must be reported exactly as supplied. "
-            + "Do not create additional expected results.\n";
-
-
-        prompt +=
-            "10. If information is unavailable, explicitly say: "
-            + "\"Not available from the provided Knowledge Graph.\"\n";
-
-
-        prompt +=
-            "11. Do not use general Playwright knowledge to invent "
-            + "application-specific behavior.\n\n";
+            "7. If information is unavailable, say: "
+            + "\"Not available from the provided Knowledge Graph.\"\n\n";
 
 
         // ==================================================
         // TEST INFORMATION
+        // ==================================================
+
+        prompt +=
+            `Test Name: ${context.testName}\n\n`;
+
+
+        prompt +=
+            "Imports:\n";
+
+        context.imports.forEach(
+            item => {
+
+                prompt +=
+                    `- ${item}\n`;
+
+            }
+        );
+
+
+        prompt +=
+            "\nPage Objects:\n";
+
+        context.pageObjects.forEach(
+            pageObject => {
+
+                prompt +=
+                    `- ${pageObject}\n`;
+
+            }
+        );
+
+
+        prompt +=
+            "\nMethods Called - Exact Order:\n";
+
+        context.methodCalls.forEach(
+            (
+                method,
+                index
+            ) => {
+
+                prompt +=
+                    `${index + 1}. ${method}\n`;
+
+            }
+        );
+
+
+        prompt +=
+            "\nMethod-to-Locator Dependencies:\n";
+
+        context.dependencies.forEach(
+            dependency => {
+
+                prompt +=
+                    `- Method: ${dependency.method}\n`;
+
+                dependency.locators.forEach(
+                    locator => {
+
+                        prompt +=
+                            `  Locator: ${locator}\n`;
+
+                    }
+                );
+
+            }
+        );
+
+
+        prompt +=
+            "\nLocators:\n";
+
+        context.locators.forEach(
+            locator => {
+
+                prompt +=
+                    `- ${locator}\n`;
+
+            }
+        );
+
+
+        prompt +=
+            "\nAssertions:\n";
+
+        context.assertions.forEach(
+            assertion => {
+
+                prompt +=
+                    `- ${assertion}\n`;
+
+            }
+        );
+
+
+        // ==================================================
+        // RESPONSE
+        // ==================================================
+
+        prompt +=
+            "\nProvide exactly these sections:\n\n";
+
+        prompt +=
+            "1. Purpose of the Test\n\n";
+
+        prompt +=
+            "2. Test Flow\n\n";
+
+        prompt +=
+            "3. Page Objects Involved\n\n";
+
+        prompt +=
+            "4. Method-to-Locator Dependency Map\n\n";
+
+        prompt +=
+            "5. Assertions and Expected Result\n\n";
+
+        prompt +=
+            "6. Complete Dependency Flow\n\n";
+
+        prompt +=
+            "7. Test Dependencies Summary\n\n";
+
+        prompt +=
+            "8. Limitations of Available Information\n\n";
+
+
+        prompt +=
+            "FINAL REQUIREMENT:\n";
+
+        prompt +=
+            "Every factual statement must be supported by the "
+            + "provided Knowledge Graph context. Never speculate.";
+
+
+        return prompt;
+
+    }
+
+
+    // ==================================================
+    // GENERATE BDD
+    // ==================================================
+
+    public buildBDDPrompt(
+        context: TestContext
+    ): string {
+
+        let prompt = "";
+
+
+        // ==================================================
+        // ROLE
+        // ==================================================
+
+        prompt +=
+            "You are an expert Playwright BDD Automation "
+            + "and Software Testing Engineer.\n\n";
+
+
+        prompt +=
+            "Generate a business-readable Gherkin BDD scenario "
+            + "using ONLY the information supplied by the "
+            + "Knowledge Graph.\n\n";
+
+
+        // ==================================================
+        // STRICT GROUNDING
+        // ==================================================
+
+        prompt +=
+            "IMPORTANT GROUNDING RULES:\n";
+
+        prompt +=
+            "1. The Knowledge Graph is the single source of truth.\n";
+
+        prompt +=
+            "2. Use ONLY the supplied test name, page objects, "
+            + "method calls, locator dependencies, locators, "
+            + "and assertions.\n";
+
+        prompt +=
+            "3. Do NOT invent URLs, pages, business rules, "
+            + "validation rules, error messages, API calls, "
+            + "database behavior, or application functionality.\n";
+
+        prompt +=
+            "4. Preserve the supplied method call order.\n";
+
+        prompt +=
+            "5. Use method names to describe actions only when "
+            + "the action is directly supported by the method name.\n";
+
+        prompt +=
+            "6. Do NOT expose technical locator names such as "
+            + "txtPassword or btnContinue in the business-readable "
+            + "Gherkin unless necessary.\n";
+
+        prompt +=
+            "7. The Then step must be based only on supplied "
+            + "assertions.\n";
+
+        prompt +=
+            "8. Do NOT create additional scenarios.\n";
+
+        prompt +=
+            "9. If information is unavailable, say: "
+            + "\"Not available from the provided Knowledge Graph.\"\n\n";
+
+
+        // ==================================================
+        // TEST
         // ==================================================
 
         prompt +=
@@ -109,41 +292,11 @@ export class TestPromptBuilder {
 
 
         // ==================================================
-        // IMPORTS
-        // ==================================================
-
-        prompt +=
-            "Imports:\n";
-
-
-        if (
-            context.imports.length === 0
-        ) {
-
-            prompt +=
-                "- None\n";
-
-        } else {
-
-            context.imports.forEach(
-                item => {
-
-                    prompt +=
-                        `- ${item}\n`;
-
-                }
-            );
-
-        }
-
-
-        // ==================================================
         // PAGE OBJECTS
         // ==================================================
 
         prompt +=
-            "\nPage Objects:\n";
-
+            "Page Objects:\n";
 
         if (
             context.pageObjects.length === 0
@@ -167,12 +320,11 @@ export class TestPromptBuilder {
 
 
         // ==================================================
-        // METHOD CALLS
+        // METHODS
         // ==================================================
 
         prompt +=
             "\nMethods Called - Exact Order:\n";
-
 
         if (
             context.methodCalls.length === 0
@@ -199,12 +351,11 @@ export class TestPromptBuilder {
 
 
         // ==================================================
-        // METHOD → LOCATOR DEPENDENCIES
+        // LOCATORS
         // ==================================================
 
         prompt +=
             "\nMethod-to-Locator Dependencies:\n";
-
 
         if (
             context.dependencies.length === 0
@@ -219,15 +370,14 @@ export class TestPromptBuilder {
                 dependency => {
 
                     prompt +=
-                        `- Method: ${dependency.method}\n`;
-
+                        `- ${dependency.method}\n`;
 
                     if (
                         dependency.locators.length === 0
                     ) {
 
                         prompt +=
-                            "  Locators: None\n";
+                            "  Locator: None\n";
 
                     } else {
 
@@ -249,41 +399,11 @@ export class TestPromptBuilder {
 
 
         // ==================================================
-        // LOCATORS
-        // ==================================================
-
-        prompt +=
-            "\nAll Locators Used By The Test:\n";
-
-
-        if (
-            context.locators.length === 0
-        ) {
-
-            prompt +=
-                "- None\n";
-
-        } else {
-
-            context.locators.forEach(
-                locator => {
-
-                    prompt +=
-                        `- ${locator}\n`;
-
-                }
-            );
-
-        }
-
-
-        // ==================================================
         // ASSERTIONS
         // ==================================================
 
         prompt +=
             "\nAssertions:\n";
-
 
         if (
             context.assertions.length === 0
@@ -307,153 +427,61 @@ export class TestPromptBuilder {
 
 
         // ==================================================
-        // DEPENDENCY FLOW
+        // BDD REQUIREMENTS
         // ==================================================
 
         prompt +=
             "\n========================================\n";
 
         prompt +=
-            "DEPENDENCY FLOW\n";
+            "BDD REQUIREMENTS\n";
 
         prompt +=
             "========================================\n\n";
 
 
         prompt +=
-            "Explain the test using the following conceptual "
-            + "dependency chain:\n\n";
+            "Generate:\n";
+
+        prompt +=
+            "1. Feature name\n";
+
+        prompt +=
+            "2. Scenario name\n";
+
+        prompt +=
+            "3. Given steps representing the known initial state\n";
+
+        prompt +=
+            "4. When steps representing the supplied user actions\n";
+
+        prompt +=
+            "5. Then steps representing the supplied assertions\n";
+
+        prompt +=
+            "6. Complete valid Gherkin syntax\n\n";
 
 
         prompt +=
-            "Test\n";
+            "Use business-readable language.\n";
 
         prompt +=
-            "  ↓\n";
-
-        prompt +=
-            "Page Objects\n";
-
-        prompt +=
-            "  ↓\n";
-
-        prompt +=
-            "Methods Called\n";
-
-        prompt +=
-            "  ↓\n";
-
-        prompt +=
-            "Method-to-Locator Dependencies\n";
-
-        prompt +=
-            "  ↓\n";
-
-        prompt +=
-            "Assertions\n\n";
-
-
-        prompt +=
-            "The dependency flow must be derived only from "
-            + "the supplied information.\n\n";
+            "Do not expose locator names in the Gherkin unless "
+            + "the locator name itself is the only available "
+            + "information.\n\n";
 
 
         // ==================================================
-        // REQUIRED RESPONSE
-        // ==================================================
-
-        prompt +=
-            "========================================\n";
-
-        prompt +=
-            "REQUIRED RESPONSE FORMAT\n";
-
-        prompt +=
-            "========================================\n\n";
-
-
-        prompt +=
-            "1. Purpose of the Test\n";
-
-        prompt +=
-            "Explain the purpose using the test name and "
-            + "supplied dependencies only.\n\n";
-
-
-        prompt +=
-            "2. Test Flow\n";
-
-        prompt +=
-            "List every method call in exactly the order "
-            + "provided by the Knowledge Graph.\n\n";
-
-
-        prompt +=
-            "3. Page Objects Involved\n";
-
-        prompt +=
-            "List the supplied page objects and explain their "
-            + "relationship to the supplied method calls.\n\n";
-
-
-        prompt +=
-            "4. Method-to-Locator Dependency Map\n";
-
-        prompt +=
-            "Create a clear table containing Method and Locator. "
-            + "Use only the supplied mapping.\n\n";
-
-
-        prompt +=
-            "5. Assertions and Expected Result\n";
-
-        prompt +=
-            "Report the supplied assertions exactly. Explain "
-            + "what they verify only when that meaning is directly "
-            + "supported by the assertion itself.\n\n";
-
-
-        prompt +=
-            "6. Complete Dependency Flow\n";
-
-        prompt +=
-            "Show the test dependency chain in a readable format "
-            + "using:\n";
-
-        prompt +=
-            "Test → Page Object → Method → Locator → Assertion.\n\n";
-
-
-        prompt +=
-            "7. Test Dependencies Summary\n";
-
-        prompt +=
-            "Summarize the methods, locators, page objects, "
-            + "imports, and assertions supplied by the graph.\n\n";
-
-
-        prompt +=
-            "8. Limitations of Available Information\n";
-
-        prompt +=
-            "Clearly identify information that cannot be determined "
-            + "from the Knowledge Graph.\n\n";
-
-
-        // ==================================================
-        // FINAL REQUIREMENT
+        // FINAL RULE
         // ==================================================
 
         prompt +=
             "FINAL REQUIREMENT:\n";
 
-
         prompt +=
-            "Every factual statement must be supported by the "
-            + "provided Knowledge Graph context. Never speculate. "
-            + "Never invent application behavior. When information "
-            + "is missing, say: \"Not available from the provided "
-            + "Knowledge Graph.\"";
+            "Every Given, When, and Then step must be supported "
+            + "by the supplied Knowledge Graph information. "
+            + "Do not invent application behavior.";
 
 
         return prompt;
