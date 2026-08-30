@@ -482,6 +482,22 @@ async function main(): Promise<void> {
         "Generate BDD <Test Name>"
     );
 
+    console.log(
+        "Who calls <Method>"
+    );
+
+    console.log(
+        "What tests depend on <Method>"
+    );
+
+    console.log(
+        "What tests use <Locator>"
+    );
+
+    console.log(
+        "Show dependency path for <Node>"
+    );
+
     console.log("");
 
     console.log(
@@ -571,11 +587,15 @@ async function main(): Promise<void> {
 
 
                 // ==================================================
-                // EXPLAIN TEST
+                // COMMAND SWITCH
                 // ==================================================
 
                 switch (command) {
 
+
+                    // ==================================================
+                    // EXPLAIN TEST
+                    // ==================================================
 
                     case CommandType.EXPLAIN_TEST: {
 
@@ -638,10 +658,6 @@ async function main(): Promise<void> {
                         }
 
 
-                        // ------------------------------------------
-                        // Build Test Context
-                        // ------------------------------------------
-
                         const testContext =
                             testContextBuilder.build(
                                 testInfo
@@ -667,10 +683,6 @@ async function main(): Promise<void> {
                             )
                         );
 
-
-                        // ------------------------------------------
-                        // AI Explanation
-                        // ------------------------------------------
 
                         console.log("");
 
@@ -741,10 +753,6 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------------------
-                        // Avoid treating "explain test" as method
-                        // ------------------------------------------
-
                         if (
                             method
                                 .toLowerCase()
@@ -814,20 +822,11 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------------------
-                        // Use Impact Analyzer as single source
-                        // for locator dependency traversal
-                        // ------------------------------------------
-
                         const locatorAnalysis =
                             impact.analyzeLocator(
                                 locator
                             );
 
-
-                        // ------------------------------------------
-                        // Check locator
-                        // ------------------------------------------
 
                         const found =
                             locatorAnalysis
@@ -889,10 +888,6 @@ async function main(): Promise<void> {
                         }
 
 
-                        // ------------------------------------------
-                        // Build NEW LocatorContext
-                        // ------------------------------------------
-
                         const locatorContext = {
 
                             locator,
@@ -915,10 +910,6 @@ async function main(): Promise<void> {
 
                         };
 
-
-                        // ------------------------------------------
-                        // AI Locator Analysis
-                        // ------------------------------------------
 
                         console.log("");
 
@@ -989,19 +980,11 @@ async function main(): Promise<void> {
                             match[1].trim();
 
 
-                        // ------------------------------------------
-                        // Graph Impact Analysis
-                        // ------------------------------------------
-
                         const impactContext =
                             impact.analyzeLocator(
                                 locatorName
                             );
 
-
-                        // ------------------------------------------
-                        // AI Impact Analysis
-                        // ------------------------------------------
 
                         console.log("");
 
@@ -1110,10 +1093,6 @@ async function main(): Promise<void> {
                         }
 
 
-                        // ------------------------------------------
-                        // Build BDD Context
-                        // ------------------------------------------
-
                         const bddContext =
                             bddContextBuilder.build(
                                 testInfo
@@ -1141,130 +1120,12 @@ async function main(): Promise<void> {
 
 
                         // ------------------------------------------
-                        // BDD Prompt
-                        // ------------------------------------------
-
-                        let bddPrompt =
-                            "";
-
-
-                        bddPrompt +=
-                            "You are an expert Playwright "
-                            + "BDD Automation Engineer.\n\n";
-
-
-                        bddPrompt +=
-                            "Generate a business-readable "
-                            + "Gherkin BDD scenario from the "
-                            + "following Playwright test "
-                            + "information.\n\n";
-
-
-                        bddPrompt +=
-                            `Test Name: ${bddContext.testName}\n\n`;
-
-
-                        bddPrompt +=
-                            "Page Objects:\n";
-
-
-                        bddContext.pageObjects.forEach(
-                            pageObject => {
-
-                                bddPrompt +=
-                                    `- ${pageObject}\n`;
-
-                            }
-                        );
-
-
-                        bddPrompt +=
-                            "\nMethods Called:\n";
-
-
-                        bddContext.methodCalls.forEach(
-                            methodCall => {
-
-                                bddPrompt +=
-                                    `- ${methodCall}\n`;
-
-                            }
-                        );
-
-
-                        bddPrompt +=
-                            "\nLocators Used:\n";
-
-
-                        bddContext.locators.forEach(
-                            locatorName => {
-
-                                bddPrompt +=
-                                    `- ${locatorName}\n`;
-
-                            }
-                        );
-
-
-                        bddPrompt +=
-                            "\nAssertions:\n";
-
-
-                        bddContext.assertions.forEach(
-                            assertion => {
-
-                                bddPrompt +=
-                                    `- ${assertion}\n`;
-
-                            }
-                        );
-
-
-                        bddPrompt +=
-                            "\nGenerate:\n";
-
-                        bddPrompt +=
-                            "1. Feature name.\n";
-
-                        bddPrompt +=
-                            "2. Scenario name.\n";
-
-                        bddPrompt +=
-                            "3. Given steps for the initial state.\n";
-
-                        bddPrompt +=
-                            "4. When steps for user actions.\n";
-
-                        bddPrompt +=
-                            "5. Then steps for expected results.\n";
-
-                        bddPrompt +=
-                            "6. Complete Gherkin syntax.\n";
-
-
-                        bddPrompt +=
-                            "\nImportant:\n";
-
-
-                        bddPrompt +=
-                            "Use business-readable language "
-                            + "rather than locator names such "
-                            + "as txtPassword or btnContinue.\n";
-
-
-                        bddPrompt +=
-                            "Do not invent functionality that "
-                            + "is not supported by the provided "
-                            + "test information.";
-
-
-                        // ------------------------------------------
-                        // AI BDD Response
+                        // Use AIService
                         // ------------------------------------------
 
                         const bddResponse =
-                            await aiService.ask(
-                                bddPrompt
+                            await aiService.generateBDD(
+                                bddContext
                             );
 
 
@@ -1282,6 +1143,374 @@ async function main(): Promise<void> {
                         console.log(
                             bddResponse
                         );
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================================
+                    // FIND CALLERS
+                    // ==================================================
+
+                    case CommandType.FIND_CALLERS: {
+
+                        const match =
+                            trimmed.match(
+                                /^who\s+calls\s+(.+)$/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log("");
+
+                            console.log(
+                                "Usage: Who calls <Method>"
+                            );
+
+                            break;
+
+                        }
+
+
+                        const method =
+                            match[1].trim();
+
+
+                        const callers =
+                            queryEngine.findCallers(
+                                method
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log(
+                            "Method Callers"
+                        );
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log("");
+
+                        console.log(
+                            "Method:"
+                        );
+
+                        console.log(
+                            method
+                        );
+
+                        console.log("");
+
+                        console.log(
+                            "Called By"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        if (
+                            callers.length === 0
+                        ) {
+
+                            console.log(
+                                "No callers found."
+                            );
+
+                        } else {
+
+                            callers.forEach(
+                                caller =>
+                                    console.log(
+                                        caller
+                                    )
+                            );
+
+                        }
+
+
+                        break;
+
+                    }
+
+
+                    // ==================================================
+                    // FIND TESTS
+                    // ==================================================
+
+                    case CommandType.FIND_TESTS: {
+
+    let target = "";
+
+    const lower =
+        trimmed.toLowerCase();
+
+
+    // ------------------------------------------
+    // "What tests depend on <Method>?"
+    // ------------------------------------------
+
+    const dependIndex =
+        lower.indexOf(
+            "what tests depend on "
+        );
+
+
+    // ------------------------------------------
+    // "What tests use <Locator>?"
+    // ------------------------------------------
+
+    const useIndex =
+        lower.indexOf(
+            "what tests use "
+        );
+
+
+    if (dependIndex === 0) {
+
+        target =
+            trimmed.substring(
+                "what tests depend on ".length
+            );
+
+    } else if (useIndex === 0) {
+
+        target =
+            trimmed.substring(
+                "what tests use ".length
+            );
+
+    } else {
+
+        console.log("");
+
+        console.log(
+            "Usage:"
+        );
+
+        console.log(
+            "What tests depend on <Method>"
+        );
+
+        console.log(
+            "What tests use <Locator>"
+        );
+
+        break;
+
+    }
+
+
+    // ------------------------------------------
+    // Remove trailing punctuation
+    // ------------------------------------------
+
+    target =
+        target
+            .trim()
+            .replace(/[?.,!]+$/g, "")
+            .trim();
+
+
+    // ------------------------------------------
+    // Find locator
+    // ------------------------------------------
+
+    const locatorNode =
+        graph.nodes.find(
+            node =>
+                node.type === "Locator" &&
+                node.id.toLowerCase() ===
+                    target.toLowerCase()
+        );
+
+
+    let affectedTests:
+        string[] = [];
+
+
+    if (locatorNode) {
+
+        affectedTests =
+            queryEngine.findTestsUsingLocator(
+                locatorNode.id
+            );
+
+    } else {
+
+        // ------------------------------------------
+        // Treat target as method
+        // ------------------------------------------
+
+        
+affectedTests =
+    queryEngine.findTestsDependingOnMethod(
+        target
+    );
+
+    }
+
+
+    // ------------------------------------------
+    // Display
+    // ------------------------------------------
+
+    console.log("");
+
+    console.log(
+        "================================="
+    );
+
+    console.log(
+        "Affected Tests"
+    );
+
+    console.log(
+        "================================="
+    );
+
+    console.log("");
+
+    console.log(
+        "Target:"
+    );
+
+    console.log(
+        target
+    );
+
+    console.log("");
+
+    console.log(
+        "Tests"
+    );
+
+    console.log(
+        "-------------------------"
+    );
+
+
+    if (
+        affectedTests.length === 0
+    ) {
+
+        console.log(
+            "No tests found."
+        );
+
+    } else {
+
+        affectedTests.forEach(
+            test =>
+                console.log(
+                    test
+                )
+        );
+
+    }
+
+
+    break;
+
+}
+
+
+                    // ==================================================
+                    // DEPENDENCY PATH
+                    // ==================================================
+
+                    case CommandType.DEPENDENCY_PATH: {
+
+                        const match =
+                            trimmed.match(
+                                /^show\s+dependency\s+paths?\s+for\s+(.+)$/i
+                            );
+
+
+                        if (!match) {
+
+                            console.log("");
+
+                            console.log(
+                                "Usage: Show dependency path for <Node>"
+                            );
+
+                            break;
+
+                        }
+
+
+                        const startNode =
+                            match[1].trim();
+
+
+                        const paths =
+                            queryEngine.findDependencyPaths(
+                                startNode
+                            );
+
+
+                        console.log("");
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log(
+                            "Dependency Paths"
+                        );
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log("");
+
+                        console.log(
+                            "Start Node:"
+                        );
+
+                        console.log(
+                            startNode
+                        );
+
+                        console.log("");
+
+                        if (
+                            paths.length === 0
+                        ) {
+
+                            console.log(
+                                "No dependency paths found."
+                            );
+
+                        } else {
+
+                            paths.forEach(
+                                (
+                                    path,
+                                    index
+                                ) => {
+
+                                    console.log(
+                                        `${index + 1}. ${path.join(" → ")}`
+                                    );
+
+                                }
+                            );
+
+                        }
 
 
                         break;
@@ -1327,6 +1556,22 @@ async function main(): Promise<void> {
 
                         console.log(
                             "Generate BDD <Test Name>"
+                        );
+
+                        console.log(
+                            "Who calls <Method>"
+                        );
+
+                        console.log(
+                            "What tests depend on <Method>"
+                        );
+
+                        console.log(
+                            "What tests use <Locator>"
+                        );
+
+                        console.log(
+                            "Show dependency path for <Node>"
                         );
 
 

@@ -12,6 +12,8 @@ import { TestPromptBuilder } from "../TestPromptBuilder";
 import { ImpactContext } from "../ImpactContext";
 import { LocatorContext } from "../LocatorContext";
 
+import { BDDContext } from "../BDDContext";
+
 
 export class AIService {
 
@@ -22,9 +24,9 @@ export class AIService {
     ) {}
 
 
-    // ==================================================
-    // DIRECT AI REQUEST
-    // ==================================================
+    // ==============================================
+    // Send prompt directly to AI provider
+    // ==============================================
 
     public async ask(
         prompt: string
@@ -37,9 +39,9 @@ export class AIService {
     }
 
 
-    // ==================================================
-    // EXPLAIN METHOD
-    // ==================================================
+    // ==============================================
+    // Explain Method
+    // ==============================================
 
     public async explainMethod(
         method: string
@@ -64,9 +66,9 @@ export class AIService {
     }
 
 
-    // ==================================================
-    // IMPACT ANALYSIS
-    // ==================================================
+    // ==============================================
+    // Impact Analysis
+    // ==============================================
 
     public async analyzeImpact(
         context: ImpactContext
@@ -89,9 +91,9 @@ export class AIService {
     }
 
 
-    // ==================================================
-    // LOCATOR ANALYSIS
-    // ==================================================
+    // ==============================================
+    // Locator Analysis
+    // ==============================================
 
     public async analyzeLocator(
         context: LocatorContext
@@ -114,9 +116,9 @@ export class AIService {
     }
 
 
-    // ==================================================
-    // EXPLAIN TEST
-    // ==================================================
+    // ==============================================
+    // Test Explanation
+    // ==============================================
 
     public async explainTest(
         context: TestContext
@@ -139,20 +141,16 @@ export class AIService {
     }
 
 
-    // ==================================================
-    // GENERATE BDD
-    // ==================================================
+    // ==============================================
+    // Generate BDD
+    // ==============================================
 
     public async generateBDD(
-        context: TestContext
+        context: BDDContext
     ): Promise<string> {
 
-        const testPromptBuilder =
-            new TestPromptBuilder();
-
-
         const prompt =
-            testPromptBuilder.buildBDDPrompt(
+            this.promptBuilder.buildBDDPrompt(
                 context
             );
 

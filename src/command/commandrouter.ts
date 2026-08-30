@@ -10,6 +10,12 @@ export enum CommandType {
 
     GENERATE_BDD = "GENERATE_BDD",
 
+    FIND_CALLERS = "FIND_CALLERS",
+
+    FIND_TESTS = "FIND_TESTS",
+
+    DEPENDENCY_PATH = "DEPENDENCY_PATH",
+
     UNKNOWN = "UNKNOWN"
 
 }
@@ -54,14 +60,47 @@ export class CommandRouter {
 
 
         // ==========================================
-        // FIND LOCATOR
+        // DEPENDENCY PATH
         // ==========================================
 
         if (
-            text.includes("locator")
+            text.includes("dependency path") ||
+            text.includes("dependency paths")
         ) {
 
-            return CommandType.FIND_LOCATOR;
+            return CommandType.DEPENDENCY_PATH;
+
+        }
+
+
+        // ==========================================
+        // FIND CALLERS
+        // ==========================================
+
+        if (
+            text.includes("who calls") ||
+            text.includes("callers")
+        ) {
+
+            return CommandType.FIND_CALLERS;
+
+        }
+
+
+        // ==========================================
+        // FIND TESTS
+        // ==========================================
+
+        if (
+            text.includes("what tests") &&
+            (
+                text.includes("depend") ||
+                text.includes("use") ||
+                text.includes("affected")
+            )
+        ) {
+
+            return CommandType.FIND_TESTS;
 
         }
 
@@ -75,6 +114,19 @@ export class CommandRouter {
         ) {
 
             return CommandType.IMPACT_ANALYSIS;
+
+        }
+
+
+        // ==========================================
+        // FIND LOCATOR
+        // ==========================================
+
+        if (
+            text.includes("locator")
+        ) {
+
+            return CommandType.FIND_LOCATOR;
 
         }
 

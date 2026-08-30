@@ -1,27 +1,51 @@
 import { KnowledgeGraph } from "../graph/KnowledgeGraph";
-import { GraphQueryService } from "../service/GraphQueryService";
+import { QueryEngine } from "../query/QueryEngine";
+
 
 export class DependencyExplorer {
 
-    private service: GraphQueryService;
+    private queryEngine: QueryEngine;
+
 
     constructor(
         private graph: KnowledgeGraph
     ) {
 
-        this.service = new GraphQueryService(graph);
+        this.queryEngine =
+            new QueryEngine(
+                graph
+            );
 
     }
 
-    public explain(node: string): void {
+
+    // ==================================================
+    // EXPLAIN DEPENDENCY TREE
+    // ==================================================
+
+    public explain(
+        node: string
+    ): void {
 
         console.log("");
-        console.log("=================================");
-        console.log("Dependency Explorer");
-        console.log("=================================");
+
+        console.log(
+            "================================="
+        );
+
+        console.log(
+            "Dependency Explorer"
+        );
+
+        console.log(
+            "================================="
+        );
+
         console.log("");
 
-        const visited = new Set<string>();
+        const visited =
+            new Set<string>();
+
 
         this.walk(
             node,
@@ -30,6 +54,11 @@ export class DependencyExplorer {
         );
 
     }
+
+
+    // ==================================================
+    // WALK GRAPH
+    // ==================================================
 
     private walk(
 
@@ -41,53 +70,139 @@ export class DependencyExplorer {
 
     ): void {
 
-        console.log(indent + node);
 
-        if (visited.has(node)) {
+        console.log(
+            indent + node
+        );
+
+
+        if (
+            visited.has(node)
+        ) {
 
             return;
 
         }
 
-        visited.add(node);
 
-        //----------------------------------
-        // Method Calls
-        //----------------------------------
+        visited.add(
+            node
+        );
+
+
+        // ----------------------------------------------
+        // Methods Called
+        // ----------------------------------------------
 
         const methods =
-            this.service.getCalledMethods(node);
+            this.queryEngine
+                .findMethodsCalledByTest(
+                    node
+                );
 
-        methods.forEach(method => {
 
-            this.walk(
+        methods.forEach(
+            method => {
 
-                method,
+                console.log(
+                    indent +
+                    "   calls → " +
+                    method
+                );
 
-                indent + "   ",
 
-                visited
+                this.walk(
+                    method,
+                    indent + "   ",
+                    visited
+                );
 
-            );
+            }
+        );
 
-        });
 
-        //----------------------------------
-        // Locator Usage
-        //----------------------------------
+        // ----------------------------------------------
+        // Methods Called By Methods
+        // ----------------------------------------------
 
-        const locators =
-            this.service.getUsedLocators(node);
+        const callers =
+            this.queryEngine
+                .findCallers(
+                    node
+                );
 
-        locators.forEach(locator => {
 
-            console.log(
+        callers.forEach(
+            caller => {
 
-                indent + "   " + locator
+                if (
+                    !methods.includes(caller)
+                ) {
 
-            );
+                    console.log(
+                        indent +
+                        "   called by → " +
+                        caller
+                    );
 
-        });
+                }
+
+            }
+        );
+
+
+        // ----------------------------------------------
+        // Direct Locators
+        // ----------------------------------------------
+
+        const directLocators =
+            this.queryEngine
+                .findDirectLocatorsByMethod(
+                    node
+                );
+
+
+        directLocators.forEach(
+            locator => {
+
+                console.log(
+                    indent +
+                    "   uses → " +
+                    locator
+                );
+
+            }
+        );
+
+
+        // ----------------------------------------------
+        // Indirect Locators
+        // ----------------------------------------------
+
+        const indirectLocators =
+            this.graph.edges
+                .filter(
+                    edge =>
+                        edge.from === node &&
+                        edge.relation === "indirectUses"
+                )
+                .map(
+                    edge =>
+                        edge.to
+                );
+
+
+        indirectLocators.forEach(
+            locator => {
+
+                console.log(
+                    indent +
+                    "   indirectly uses → " +
+                    locator
+                );
+
+            }
+        );
 
     }
 
