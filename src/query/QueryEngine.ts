@@ -86,138 +86,37 @@ export class QueryEngine {
             .filter(n => n.type === "Test")
             .map(n => n.id);
 
-        return tests.filter(test =>
-            this.findLocatorsUsedByTest(test)
+        return tests.filter(testName =>
+            this.findLocatorsUsedByTest(testName)
                 .some(x => x.toLowerCase() === target.toLowerCase())
         );
     }
 
-    public findTestsDependingOnMethod(
-    method: string
-): string[] {
+    public findTestsDependingOnMethod(method: string): string[] {
+        const target = this.normalize(method);
+        const result = new Set<string>();
+        const visited = new Set<string>();
 
-    const target =
-        this.normalize(method);
+        const walk = (current: string): void => {
+            if (visited.has(current)) return;
+            visited.add(current);
 
+            this.graph.edges
+                .filter(e => e.to === current && e.relation === "calls")
+                .forEach(e => {
+                    const node = this.graph.nodes.find(n => n.id === e.from);
 
-    const result =
-        new Set<string>();
+                    if (node && node.type === "Test") {
+                        result.add(e.from);
+                    } else {
+                        walk(e.from);
+                    }
+                });
+        };
 
-
-    // ==============================================
-    // Get all Test nodes
-    // ==============================================
-
-    const tests =
-        this.graph.nodes
-            .filter(
-                node =>
-                    node.type === "Test"
-            )
-            .map(
-                node =>
-                    node.id
-            );
-
-
-    // ==============================================
-    // Check each Test
-    // ==============================================
-
-    for (
-        const test of tests
-    ) {
-
-        const visited =
-            new Set<string>();
-
-
-        const walk =
-            (
-                current: string
-            ): boolean => {
-
-                if (
-                    visited.has(current)
-                ) {
-
-                    return false;
-
-                }
-
-
-                visited.add(
-                    current
-                );
-
-
-                // ----------------------------------
-                // Did this method reach the target?
-                // ----------------------------------
-
-                if (
-                    current.toLowerCase() ===
-                    target.toLowerCase()
-                ) {
-
-                    return true;
-
-                }
-
-
-                // ----------------------------------
-                // Find methods called by current
-                // ----------------------------------
-
-                const calledMethods =
-                    this.graph.edges
-                        .filter(
-                            edge =>
-                                edge.from === current &&
-                                edge.relation === "calls"
-                        )
-                        .map(
-                            edge =>
-                                edge.to
-                        );
-
-
-                // ----------------------------------
-                // Continue recursively
-                // ----------------------------------
-
-                return calledMethods.some(
-                    calledMethod =>
-                        walk(
-                            calledMethod
-                        )
-                );
-
-            };
-
-
-        // ==========================================
-        // Start from the Test
-        // ==========================================
-
-        if (
-            walk(test)
-        ) {
-
-            result.add(
-                test
-            );
-
-        }
-
+        walk(target);
+        return Array.from(result);
     }
-
-
-    return Array.from(
-        result
-    );
-
-}
 
     public findImportsByPage(page: string): string[] {
         return this.graph.edges
@@ -232,22 +131,23 @@ export class QueryEngine {
     }
 
     public findCallers(method: string): string[] {
-        const target = this.normalize(method);
+        const normalized = this.normalize(method);
         return this.graph.edges
-            .filter(e => e.to === target && e.relation === "calls")
+            .filter(e => e.to === normalized && e.relation === "calls")
             .map(e => e.from);
     }
 
     public findDirectMethodsUsingLocator(locator: string): string[] {
-        const target = this.normalize(locator);
+        const normalized = this.normalize(locator);
         return this.graph.edges
-            .filter(e => e.to === target && e.relation === "uses")
+            .filter(e => e.to === normalized && e.relation === "uses")
             .filter(e => this.graph.nodes.some(n => n.id === e.from && n.type === "Method"))
             .map(e => e.from);
     }
 
     public findIndirectMethodsUsingLocator(locator: string): string[] {
-        const direct = new Set(this.findDirectMethodsUsingLocator(locator));
+        const normalized = this.normalize(locator);
+        const direct = new Set(this.findDirectMethodsUsingLocator(normalized));
         const result = new Set<string>();
         const visited = new Set<string>();
 
@@ -256,8 +156,12 @@ export class QueryEngine {
             visited.add(method);
 
             this.findCallers(method).forEach(caller => {
-                if (!direct.has(caller)) result.add(caller);
-                walk(caller);
+                const node = this.graph.nodes.find(n => n.id === caller);
+
+                if (node && node.type === "Method" && !direct.has(caller)) {
+                    result.add(caller);
+                    walk(caller);
+                }
             });
         };
 
@@ -266,24 +170,25 @@ export class QueryEngine {
     }
 
     public findAffectedMethodsByLocator(locator: string): string[] {
-        return Array.from(new Set([
+        return [
             ...this.findDirectMethodsUsingLocator(locator),
             ...this.findIndirectMethodsUsingLocator(locator)
-        ]));
+        ];
     }
 
     public findLocatorImpact(locator: string): LocatorQueryResult {
-        const target = this.normalize(locator);
+        const normalized = this.normalize(locator);
 
-        const found = this.graph.nodes.some(n =>
-            n.type === "Locator" &&
-            n.id.toLowerCase() === target.toLowerCase()
+        const locatorNode = this.graph.nodes.find(
+            n =>
+                n.type === "Locator" &&
+                n.id.toLowerCase() === normalized.toLowerCase()
         );
 
-        if (!found) {
+        if (!locatorNode) {
             return {
                 found: false,
-                locator: target,
+                locator: normalized,
                 directMethods: [],
                 indirectMethods: [],
                 affectedMethods: [],
@@ -291,25 +196,21 @@ export class QueryEngine {
             };
         }
 
-        const directMethods = this.findDirectMethodsUsingLocator(target);
-        const indirectMethods = this.findIndirectMethodsUsingLocator(target);
-        const affectedMethods = Array.from(new Set([
-            ...directMethods,
-            ...indirectMethods
-        ]));
+        const directMethods = this.findDirectMethodsUsingLocator(normalized);
+        const indirectMethods = this.findIndirectMethodsUsingLocator(normalized);
 
         return {
             found: true,
-            locator: target,
+            locator: normalized,
             directMethods,
             indirectMethods,
-            affectedMethods,
-            affectedTests: this.findTestsUsingLocator(target)
+            affectedMethods: [...directMethods, ...indirectMethods],
+            affectedTests: this.findTestsUsingLocator(normalized)
         };
     }
 
     public findDependencyPaths(startNode: string): string[][] {
-        const start = this.normalize(startNode);
+        const normalized = this.normalize(startNode);
         const paths: string[][] = [];
 
         const walk = (
@@ -322,9 +223,10 @@ export class QueryEngine {
             const nextVisited = new Set(visited);
             nextVisited.add(current);
 
-            const incoming = this.graph.edges.filter(e =>
-                e.to === current &&
-                (e.relation === "uses" || e.relation === "calls")
+            const incoming = this.graph.edges.filter(
+                edge =>
+                    edge.to === current &&
+                    (edge.relation === "uses" || edge.relation === "calls")
             );
 
             if (incoming.length === 0) {
@@ -332,15 +234,101 @@ export class QueryEngine {
                 return;
             }
 
-            incoming.forEach(e =>
-                walk(e.from, [...path, e.from], nextVisited)
-            );
+            incoming.forEach(edge => {
+                walk(
+                    edge.from,
+                    [...path, edge.from],
+                    nextVisited
+                );
+            });
         };
 
-        walk(start, [start], new Set<string>());
+        walk(normalized, [normalized], new Set<string>());
 
         const unique = new Map<string, string[]>();
-        paths.forEach(path => unique.set(path.join("→"), path));
+
+        paths.forEach(path => {
+            unique.set(path.join("→"), path);
+        });
+
+        return Array.from(unique.values());
+    }
+
+    public findDependencyPathsWithRelations(
+        startNode: string
+    ): {
+        node: string;
+        relation?: string;
+    }[][] {
+        const normalized = this.normalize(startNode);
+        const paths: {
+            node: string;
+            relation?: string;
+        }[][] = [];
+
+        const walk = (
+            current: string,
+            path: {
+                node: string;
+                relation?: string;
+            }[],
+            visited: Set<string>
+        ): void => {
+            if (visited.has(current)) return;
+
+            const nextVisited = new Set(visited);
+            nextVisited.add(current);
+
+            const incoming = this.graph.edges.filter(
+                edge =>
+                    edge.to === current &&
+                    (edge.relation === "uses" || edge.relation === "calls")
+            );
+
+            if (incoming.length === 0) {
+                paths.push(path);
+                return;
+            }
+
+            incoming.forEach(edge => {
+                walk(
+                    edge.from,
+                    [
+                        ...path,
+                        {
+                            node: edge.from,
+                            relation:
+                                edge.relation === "uses"
+                                    ? "used by"
+                                    : "called by"
+                        }
+                    ],
+                    nextVisited
+                );
+            });
+        };
+
+        walk(
+            normalized,
+            [{ node: normalized }],
+            new Set<string>()
+        );
+
+        const unique = new Map<
+            string,
+            {
+                node: string;
+                relation?: string;
+            }[]
+        >();
+
+        paths.forEach(path => {
+            const key = path
+                .map(step => `${step.relation ?? ""}:${step.node}`)
+                .join("|");
+
+            unique.set(key, path);
+        });
 
         return Array.from(unique.values());
     }

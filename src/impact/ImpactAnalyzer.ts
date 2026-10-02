@@ -21,15 +21,6 @@ export class ImpactAnalyzer {
         locator: string
     ): ImpactAnalysisResult {
 
-        console.log("");
-        console.log("=================================");
-        console.log("Impact Analysis");
-        console.log("=================================");
-
-        console.log("");
-        console.log("Changed Locator:");
-        console.log(locator);
-
 
         // ==========================================
         // Step 1
@@ -120,6 +111,12 @@ export class ImpactAnalyzer {
                                 );
 
 
+                            // Only Methods become
+                            // indirect methods.
+                            //
+                            // Test nodes are handled
+                            // separately below.
+
                             if (
                                 sourceNode &&
                                 sourceNode.type ===
@@ -186,154 +183,34 @@ export class ImpactAnalyzer {
 
         // ==========================================
         // Step 4
-        // Convert Sets to Arrays
+        // Return Impact Context
         // ==========================================
 
-        const result:
-            ImpactAnalysisResult = {
+        return {
 
-                locator,
+            locator,
 
-                directMethods:
-                    Array.from(
-                        directMethods
-                    ),
+            directMethods:
+                Array.from(
+                    directMethods
+                ),
 
-                indirectMethods:
-                    Array.from(
-                        indirectMethods
-                    ),
+            indirectMethods:
+                Array.from(
+                    indirectMethods
+                ),
 
-                affectedMethods:
-                    Array.from(
-                        affectedMethodSet
-                    ),
+            affectedMethods:
+                Array.from(
+                    affectedMethodSet
+                ),
 
-                affectedTests:
-                    Array.from(
-                        affectedTests
-                    )
+            affectedTests:
+                Array.from(
+                    affectedTests
+                )
 
-            };
-
-
-        // ==========================================
-        // Print Direct Methods
-        // ==========================================
-
-        console.log("");
-        console.log(
-            "Directly Affected Methods"
-        );
-        console.log(
-            "-------------------------"
-        );
-
-
-        if (
-            result.directMethods.length === 0
-        ) {
-
-            console.log("None");
-
-        } else {
-
-            result.directMethods.forEach(
-                method =>
-                    console.log(method)
-            );
-
-        }
-
-
-        // ==========================================
-        // Print Indirect Methods
-        // ==========================================
-
-        console.log("");
-        console.log(
-            "Indirectly Affected Methods"
-        );
-        console.log(
-            "-------------------------"
-        );
-
-
-        if (
-            result.indirectMethods.length === 0
-        ) {
-
-            console.log("None");
-
-        } else {
-
-            result.indirectMethods.forEach(
-                method =>
-                    console.log(method)
-            );
-
-        }
-
-
-        // ==========================================
-        // Print All Affected Methods
-        // ==========================================
-
-        console.log("");
-        console.log(
-            "Affected Methods"
-        );
-        console.log(
-            "-------------------------"
-        );
-
-
-        if (
-            result.affectedMethods.length === 0
-        ) {
-
-            console.log("None");
-
-        } else {
-
-            result.affectedMethods.forEach(
-                method =>
-                    console.log(method)
-            );
-
-        }
-
-
-        // ==========================================
-        // Print Affected Tests
-        // ==========================================
-
-        console.log("");
-        console.log(
-            "Affected Tests"
-        );
-        console.log(
-            "-------------------------"
-        );
-
-
-        if (
-            result.affectedTests.length === 0
-        ) {
-
-            console.log("None");
-
-        } else {
-
-            result.affectedTests.forEach(
-                test =>
-                    console.log(test)
-            );
-
-        }
-
-
-        return result;
+        };
 
     }
 
@@ -346,8 +223,9 @@ export class ImpactAnalyzer {
     private isTestAffected(
         currentNode: string,
         affectedMethods: Set<string>,
-        visited: Set<string> = new Set()
+        visited: Set<string> = new Set<string>()
     ): boolean {
+
 
         if (
             visited.has(

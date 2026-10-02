@@ -41,35 +41,40 @@ import {
 async function main(): Promise<void> {
 
 
-    // ==================================================
-    // PROJECT PATH
-    // ==================================================
+ // ==================================================
+// PROJECT PATH
+// ==================================================
 
-    const projectPath =
-        process.argv[2] ??
-        "C:\\OpenCartPlaywright";
-
-
-    // ==================================================
-    // PROVIDER
-    // ==================================================
-
-    const providerArgument =
-        process.argv.find(
+const nonOptionArguments =
+    process.argv.slice(2)
+        .filter(
             argument =>
-                argument.startsWith(
-                    "--provider="
-                )
+                !argument.startsWith("--")
         );
 
+const projectPath =
+    nonOptionArguments.length > 0
+        ? nonOptionArguments[0]
+        : "C:\\OpenCartPlaywright";
 
-    const providerName =
-        providerArgument
-            ? providerArgument
-                .split("=")[1]
-                .toLowerCase()
-            : "mock";
 
+// ==================================================
+// PROVIDER
+// ==================================================
+
+const providerArgument =
+    process.argv.find(
+        argument =>
+            argument.startsWith("--provider=")
+    );
+
+
+const providerName =
+    providerArgument
+        ? providerArgument
+            .split("=")[1]
+            .toLowerCase()
+        : "mock";
 
     // ==================================================
     // START
@@ -750,7 +755,13 @@ async function main(): Promise<void> {
 
 
                         const method =
-                            match[1].trim();
+                            match[1]
+                                .trim()
+                                .replace(
+                                    /[?.,!]+$/g,
+                                    ""
+                                )
+                                .trim();
 
 
                         if (
@@ -819,7 +830,13 @@ async function main(): Promise<void> {
 
 
                         const locator =
-                            match[1].trim();
+                            match[1]
+                                .trim()
+                                .replace(
+                                    /[?.,!]+$/g,
+                                    ""
+                                )
+                                .trim();
 
 
                         const locatorAnalysis =
@@ -953,19 +970,125 @@ async function main(): Promise<void> {
                     }
 
 
-                    // ==================================================
+                                       // ==================================================
                     // IMPACT ANALYSIS
                     // ==================================================
 
                     case CommandType.IMPACT_ANALYSIS: {
 
-                        const match =
+                        let locatorName = "";
+
+
+                        // ------------------------------------------
+                        // Format 1:
+                        // impact txtPassword
+                        // ------------------------------------------
+
+                        const impactMatch =
                             trimmed.match(
                                 /^impact\s+(.+)$/i
                             );
 
 
-                        if (!match) {
+                        if (impactMatch) {
+
+                            locatorName =
+                                impactMatch[1]
+                                    .trim();
+
+                        }
+
+
+                        // ------------------------------------------
+                        // Format 2:
+                        // What will be affected if txtPassword changes?
+                        // ------------------------------------------
+
+                        if (!locatorName) {
+
+                            const changesMatch =
+                                trimmed.match(
+                                    /what\s+will\s+be\s+affected\s+if\s+(.+?)\s+changes?\??$/i
+                                );
+
+
+                            if (changesMatch) {
+
+                                locatorName =
+                                    changesMatch[1]
+                                        .trim();
+
+                            }
+
+                        }
+
+
+                        // ------------------------------------------
+                        // Format 3:
+                        // What is the impact of changing txtPassword?
+                        // ------------------------------------------
+
+                        if (!locatorName) {
+
+                            const changingMatch =
+                                trimmed.match(
+                                    /what\s+is\s+the\s+impact\s+of\s+changing\s+(.+?)\??$/i
+                                );
+
+
+                            if (changingMatch) {
+
+                                locatorName =
+                                    changingMatch[1]
+                                        .trim();
+
+                            }
+
+                        }
+
+
+                        // ------------------------------------------
+                        // Format 4:
+                        // What is affected by txtPassword?
+                        // ------------------------------------------
+
+                        if (!locatorName) {
+
+                            const affectedMatch =
+                                trimmed.match(
+                                    /what\s+is\s+affected\s+by\s+(.+?)\??$/i
+                                );
+
+
+                            if (affectedMatch) {
+
+                                locatorName =
+                                    affectedMatch[1]
+                                        .trim();
+
+                            }
+
+                        }
+
+
+                        // ------------------------------------------
+                        // Clean punctuation
+                        // ------------------------------------------
+
+                        locatorName =
+                            locatorName
+                                .replace(
+                                    /[?.,!]+$/g,
+                                    ""
+                                )
+                                .trim();
+
+
+                        // ------------------------------------------
+                        // Validate
+                        // ------------------------------------------
+
+                        if (!locatorName) {
 
                             console.log(
                                 "Please provide a locator."
@@ -976,15 +1099,169 @@ async function main(): Promise<void> {
                         }
 
 
-                        const locatorName =
-                            match[1].trim();
-
+                        // ------------------------------------------
+                        // Analyze impact
+                        // ------------------------------------------
 
                         const impactContext =
                             impact.analyzeLocator(
                                 locatorName
                             );
 
+
+                        console.log("");
+
+                        console.log(
+                            "================================="
+                        );
+
+                        console.log(
+                            "Impact Analysis"
+                        );
+
+                        console.log(
+                            "================================="
+                        );
+
+
+                        console.log("");
+
+                        console.log(
+                            "Changed Locator:"
+                        );
+
+                        console.log(
+                            impactContext.locator
+                        );
+
+
+                        console.log("");
+
+                        console.log(
+                            "Directly Affected Methods"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        if (
+                            impactContext.directMethods.length === 0
+                        ) {
+
+                            console.log(
+                                "None"
+                            );
+
+                        } else {
+
+                            impactContext.directMethods.forEach(
+                                method =>
+                                    console.log(
+                                        method
+                                    )
+                            );
+
+                        }
+
+
+                        console.log("");
+
+                        console.log(
+                            "Indirectly Affected Methods"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        if (
+                            impactContext.indirectMethods.length === 0
+                        ) {
+
+                            console.log(
+                                "None"
+                            );
+
+                        } else {
+
+                            impactContext.indirectMethods.forEach(
+                                method =>
+                                    console.log(
+                                        method
+                                    )
+                            );
+
+                        }
+
+
+                        console.log("");
+
+                        console.log(
+                            "Affected Methods"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        if (
+                            impactContext.affectedMethods.length === 0
+                        ) {
+
+                            console.log(
+                                "None"
+                            );
+
+                        } else {
+
+                            impactContext.affectedMethods.forEach(
+                                method =>
+                                    console.log(
+                                        method
+                                    )
+                            );
+
+                        }
+
+
+                        console.log("");
+
+                        console.log(
+                            "Affected Tests"
+                        );
+
+                        console.log(
+                            "-------------------------"
+                        );
+
+
+                        if (
+                            impactContext.affectedTests.length === 0
+                        ) {
+
+                            console.log(
+                                "None"
+                            );
+
+                        } else {
+
+                            impactContext.affectedTests.forEach(
+                                test =>
+                                    console.log(
+                                        test
+                                    )
+                            );
+
+                        }
+
+
+                        // ------------------------------------------
+                        // AI Analysis
+                        // ------------------------------------------
 
                         console.log("");
 
@@ -1425,7 +1702,6 @@ affectedTests =
 
 }
 
-
                     // ==================================================
                     // DEPENDENCY PATH
                     // ==================================================
@@ -1452,11 +1728,17 @@ affectedTests =
 
 
                         const startNode =
-                            match[1].trim();
+                            match[1]
+                                .trim()
+                                .replace(
+                                    /[?.,!]+$/g,
+                                    ""
+                                )
+                                .trim();
 
 
                         const paths =
-                            queryEngine.findDependencyPaths(
+                            queryEngine.findDependencyPathsWithRelations(
                                 startNode
                             );
 
@@ -1487,6 +1769,7 @@ affectedTests =
 
                         console.log("");
 
+
                         if (
                             paths.length === 0
                         ) {
@@ -1504,8 +1787,36 @@ affectedTests =
                                 ) => {
 
                                     console.log(
-                                        `${index + 1}. ${path.join(" → ")}`
+                                        `${index + 1}. ${path[0].node}`
                                     );
+
+
+                                    for (
+                                        let i = 1;
+                                        i < path.length;
+                                        i++
+                                    ) {
+
+                                        const item =
+                                            path[i];
+
+                                        const previous =
+                                            path[i - 1];
+
+
+                                        const relation =
+                                            item.relation ??
+                                            "depends on";
+
+
+                                        console.log(
+                                            `   ${i === 1 ? "└─" : "   └─"} ${relation} → ${item.node}`
+                                        );
+
+                                    }
+
+
+                                    console.log("");
 
                                 }
                             );
@@ -1516,7 +1827,6 @@ affectedTests =
                         break;
 
                     }
-
 
                     // ==================================================
                     // UNKNOWN

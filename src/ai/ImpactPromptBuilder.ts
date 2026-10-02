@@ -19,9 +19,8 @@ export class ImpactPromptBuilder {
             + "Software Impact Analysis Engineer.\n\n";
 
         prompt +=
-            "Analyze the impact of changing the following "
-            + "Playwright locator using ONLY the dependency "
-            + "information provided by the Knowledge Graph.\n\n";
+            "Analyze the locator dependency information "
+            + "provided below from a Playwright Knowledge Graph.\n\n";
 
 
         // ==================================================
@@ -42,33 +41,54 @@ export class ImpactPromptBuilder {
         prompt +=
             "3. Do NOT invent pages, methods, tests, locators, "
             + "URLs, business rules, validations, or application "
-            + "functionality.\n";
+            + "behavior.\n";
 
         prompt +=
-            "4. Do NOT assume functionality that is not explicitly "
-            + "represented in the dependency information.\n";
+            "4. Do NOT assume that an affected test calls an "
+            + "indirect method unless that relationship is explicitly "
+            + "represented in the supplied information.\n";
 
         prompt +=
-            "5. Do NOT introduce hypothetical application flows.\n";
+            "5. Do NOT construct a dependency chain by simply "
+            + "combining lists. Only show a chain when the supplied "
+            + "relationships support that exact chain.\n";
 
         prompt +=
-            "6. Do NOT invent additional affected tests.\n";
+            "6. Directly affected methods are methods explicitly "
+            + "using the changed locator.\n";
 
         prompt +=
-            "7. Recommended regression testing must be limited to "
+            "7. Indirectly affected methods are methods identified "
+            + "as indirect dependencies of the directly affected "
+            + "methods.\n";
+
+        prompt +=
+            "8. Affected tests are tests explicitly supplied by the "
+            + "Knowledge Graph.\n";
+
+        prompt +=
+            "9. Do NOT claim that an affected test calls or depends "
+            + "on a particular indirect method unless that relationship "
+            + "is explicitly provided.\n";
+
+        prompt +=
+            "10. Do NOT invent additional affected tests.\n";
+
+        prompt +=
+            "11. Recommended regression testing must be limited to "
             + "the affected tests supplied by the Knowledge Graph.\n";
 
         prompt +=
-            "8. If information is unavailable, say: "
-            + "\"Not available from the provided Knowledge Graph.\"\n";
+            "12. Risk must be based ONLY on the supplied dependency "
+            + "relationships and the number of affected methods/tests.\n";
 
         prompt +=
-            "9. Risk must be based ONLY on the supplied dependency "
-            + "relationships and number of affected methods/tests.\n";
+            "13. Do not use general Playwright knowledge to invent "
+            + "application-specific behavior.\n";
 
         prompt +=
-            "10. Do not use general Playwright knowledge to invent "
-            + "application-specific behavior.\n\n";
+            "14. If information is unavailable, say exactly: "
+            + "\"Not available from the provided Knowledge Graph.\"\n\n";
 
 
         // ==================================================
@@ -201,44 +221,31 @@ export class ImpactPromptBuilder {
 
 
         // ==================================================
-        // DEPENDENCY FLOW
+        // IMPORTANT DEPENDENCY INTERPRETATION
         // ==================================================
 
         prompt +=
             "\n========================================\n";
 
         prompt +=
-            "DEPENDENCY FLOW\n";
+            "DEPENDENCY INTERPRETATION RULES\n";
 
         prompt +=
             "========================================\n\n";
 
         prompt +=
-            "Explain the impact using this dependency concept:\n\n";
+            "The supplied lists describe categories of dependency. "
+            + "They do NOT automatically establish a complete chain "
+            + "between every item in the lists.\n\n";
 
         prompt +=
-            "Changed Locator\n";
+            "For example, an affected test and an indirectly affected "
+            + "method may both appear in the context without the test "
+            + "calling that indirect method.\n\n";
 
         prompt +=
-            "      ↓\n";
-
-        prompt +=
-            "Directly Affected Methods\n";
-
-        prompt +=
-            "      ↓\n";
-
-        prompt +=
-            "Indirectly Affected Methods\n";
-
-        prompt +=
-            "      ↓\n";
-
-        prompt +=
-            "Affected Tests\n\n";
-
-        prompt +=
-            "Use ONLY the supplied dependency information.\n\n";
+            "Never combine independent dependency facts into a "
+            + "relationship that was not explicitly supplied.\n\n";
 
 
         // ==================================================
@@ -255,135 +262,172 @@ export class ImpactPromptBuilder {
             "========================================\n\n";
 
 
-        // --------------------------------------------------
-        // 1. Overall Impact
-        // --------------------------------------------------
+        // ==================================================
+        // 1. OVERALL IMPACT
+        // ==================================================
 
         prompt +=
             "1. Overall Impact\n";
 
         prompt +=
-            "Describe the impact of changing the locator using "
-            + "only the supplied affected methods and tests.\n\n";
-
-
-        // --------------------------------------------------
-        // 2. Risk Level
-        // --------------------------------------------------
+            "Summarize the impact using only the supplied "
+            + "dependency information.\n";
 
         prompt +=
-            "2. Risk Level\n";
+            "Do not infer application behavior.\n\n";
+
+
+        // ==================================================
+        // 2. RISK LEVEL
+        // ==================================================
 
         prompt +=
-            "Assign exactly one risk level: Low, Medium, or High.\n";
+    "2. Risk Level\n";
 
-        prompt +=
-            "Explain the risk using only the number and dependency "
-            + "relationships of the affected methods and tests.\n\n";
+prompt +=
+    "Assign exactly one of: Low, Medium, or High.\n";
+
+prompt +=
+    "Base the decision ONLY on the number of affected methods, "
+    + "the distinction between direct and indirect methods, and "
+    + "the number of affected tests.\n";
+
+prompt +=
+    "Do not describe the risk using business importance, "
+    + "criticality, authentication, financial impact, or other "
+    + "domain assumptions unless explicitly provided by the "
+    + "Knowledge Graph.\n\n";
+
+prompt +=
+    "Do not describe the risk using business importance, "
+    + "criticality, authentication, financial impact, or other "
+    + "domain assumptions unless explicitly provided by the "
+    + "Knowledge Graph.\n\n";
 
 
-        // --------------------------------------------------
-        // 3. Directly Affected Methods
-        // --------------------------------------------------
+        // ==================================================
+        // 3. DIRECT METHODS
+        // ==================================================
 
         prompt +=
             "3. Directly Affected Methods\n";
 
         prompt +=
-            "List and explain only the methods supplied under "
-            + "Directly Affected Methods.\n\n";
+            "List only the supplied directly affected methods.\n";
+
+        prompt +=
+            "Do not invent what these methods do.\n\n";
 
 
-        // --------------------------------------------------
-        // 4. Indirectly Affected Methods
-        // --------------------------------------------------
+        // ==================================================
+        // 4. INDIRECT METHODS
+        // ==================================================
 
         prompt +=
             "4. Indirectly Affected Methods\n";
 
         prompt +=
-            "List and explain only the methods supplied under "
-            + "Indirectly Affected Methods.\n";
+            "List only the supplied indirectly affected methods.\n";
 
         prompt +=
-            "Explain that these methods are indirectly affected "
-            + "according to the dependency information supplied "
-            + "by the Knowledge Graph.\n\n";
+            "State that they are indirectly affected according to "
+            + "the supplied Knowledge Graph dependency information.\n";
+
+        prompt +=
+            "Do not claim that a test calls these methods unless "
+            + "that relationship is explicitly provided.\n\n";
 
 
-        // --------------------------------------------------
-        // 5. Affected Tests
-        // --------------------------------------------------
+        // ==================================================
+        // 5. AFFECTED TESTS
+        // ==================================================
 
         prompt +=
             "5. Affected Tests\n";
 
         prompt +=
-            "List only the tests supplied under Affected Tests.\n";
+            "List only the supplied affected tests.\n";
 
         prompt +=
-            "Do not claim that any other tests are affected.\n\n";
-
-
-        // --------------------------------------------------
-        // 6. Dependency Chain
-        // --------------------------------------------------
+            "Do not add any other tests.\n";
 
         prompt +=
-            "6. Dependency Chain\n";
+            "Do not claim that an affected test calls a particular "
+            + "method unless that relationship is explicitly "
+            + "represented in the supplied context.\n\n";
+
+
+        // ==================================================
+        // 6. DEPENDENCY RELATIONSHIPS
+        // ==================================================
 
         prompt +=
-            "Show the impact as a readable dependency chain:\n";
+            "6. Dependency Relationships\n";
 
         prompt +=
-            "Locator → Direct Method → Indirect Method → Test.\n";
+            "Describe only relationships that can be established "
+            + "from the supplied dependency information.\n\n";
 
         prompt +=
-            "Use only relationships supported by the supplied "
-            + "dependency information.\n\n";
+            "If an exact locator-to-method-to-test chain is not "
+            + "provided, do NOT create one.\n";
+
+        prompt +=
+            "Instead, describe the individual supported relationships.\n\n";
 
 
-        // --------------------------------------------------
-        // 7. Recommended Regression Tests
-        // --------------------------------------------------
+        // ==================================================
+        // 7. RECOMMENDED REGRESSION TESTS
+        // ==================================================
 
         prompt +=
             "7. Recommended Regression Tests\n";
 
         prompt +=
-            "Recommend regression testing only for the affected "
-            + "tests explicitly supplied by the Knowledge Graph.\n";
+            "Recommend only the affected tests explicitly supplied "
+            + "by the Knowledge Graph.\n";
 
         prompt +=
             "Do not create hypothetical tests.\n\n";
 
 
-        // --------------------------------------------------
-        // 8. Potential Business Functionality
-        // --------------------------------------------------
+        // ==================================================
+        // 8. POTENTIAL FUNCTIONALITY
+        // ==================================================
 
-        prompt +=
-            "8. Potential Business Functionality Affected\n";
+ prompt +=
+    "8. Potential Functionality Affected\n";
 
-        prompt +=
-            "Describe only functionality that can be directly "
-            + "inferred from the names of the supplied methods "
-            + "and tests.\n";
+prompt +=
+    "Only describe functionality that can be directly inferred "
+    + "from method or test names.\n";
 
-        prompt +=
-            "Do not invent additional functionality.\n\n";
+prompt +=
+    "Every statement must clearly say it is an inference from "
+    + "the method or test name, not a confirmed application behavior.\n";
 
+prompt +=
+    "If functionality cannot be established from the supplied "
+    + "Knowledge Graph, say: "
+    + "\"Not available from the provided Knowledge Graph.\"\n\n";
 
-        // --------------------------------------------------
-        // 9. Limitations
-        // --------------------------------------------------
+prompt +=
+    "Every such statement must explicitly say that it is an "
+    + "inference from the name.\n";
+
+prompt +=
+    "Do not classify functionality using domain terms that are "
+    + "not present in the Knowledge Graph.\n\n";
+        // ==================================================
+        // 9. LIMITATIONS
+        // ==================================================
 
         prompt +=
             "9. Limitations of Available Information\n";
 
         prompt +=
-            "Clearly state what cannot be determined from the "
-            + "provided Knowledge Graph.\n\n";
+            "State what cannot be determined from the supplied "
+            + "Knowledge Graph.\n\n";
 
 
         // ==================================================
@@ -396,9 +440,10 @@ export class ImpactPromptBuilder {
         prompt +=
             "Every factual statement must be supported by the "
             + "provided Knowledge Graph context. Do not speculate. "
-            + "Do not invent application behavior. If information "
-            + "is unavailable, say: \"Not available from the "
-            + "provided Knowledge Graph.\"";
+            + "Do not invent application behavior. Do not construct "
+            + "dependency chains by combining unrelated lists. "
+            + "If information is unavailable, say exactly: "
+            + "\"Not available from the provided Knowledge Graph.\"";
 
 
         return prompt;

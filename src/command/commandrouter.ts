@@ -109,14 +109,40 @@ export class CommandRouter {
         // IMPACT ANALYSIS
         // ==========================================
 
+               // ==========================================
+        // IMPACT ANALYSIS
+        // ==========================================
+
         if (
-            text.includes("impact")
+            text.includes("impact") ||
+            (
+                text.includes("what will be affected") &&
+                text.includes("changes")
+            ) ||
+            (
+                text.includes("what is affected") &&
+                (
+                    text.includes("changes") ||
+                    text.includes("change")
+                )
+            ) ||
+            (
+                text.includes("what happens if") &&
+                text.includes("changes")
+            ) ||
+            (
+                text.includes("affected by") &&
+                (
+                    text.includes("locator") ||
+                    text.includes("changes") ||
+                    text.includes("change")
+                )
+            )
         ) {
 
             return CommandType.IMPACT_ANALYSIS;
 
         }
-
 
         // ==========================================
         // FIND LOCATOR
